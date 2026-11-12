@@ -134,6 +134,22 @@ var SA_TEX = (function () {
     return '\\steps{\n' + items + '\n}\n';
   }
 
+  /* Gợi ý từ điển cho mỗi câu (comment trong .tex, không ảnh hưởng macro). */
+  function dictHintLine(tokens) {
+    var hits = [], seen = Object.create(null);
+    tokens.forEach(function (t) {
+      var e = SA.dictLookup(t);
+      if (e && !seen[t]) {
+        seen[t] = 1;
+        hits.push(t + ' = ' + e.vi.split(';')[0].split(' / ')[0].trim() +
+          ' (' + e.lemma + ')');
+      }
+    });
+    if (!hits.length) return '';
+    return '% Gợi ý từ điển (800 từ theo Kantharos/Omega; không thấy = tự tra thêm): ' +
+      hits.join('; ') + '\n';
+  }
+
   function satzBlock(s) {
     var line = '{\\gr ' + s.tokens.map(esc).join(' ') + '}';
     return '\\begin{satz}{Câu ' + s.n + ' – {\\grt ' + esc(s.greek) + '}}\n' +
@@ -141,6 +157,7 @@ var SA_TEX = (function () {
       '% KEY trong {Prad, Subj, Akk, Dat, Attr, PN, Adv, Inf, Neg, Part, AcIS, Konj, App, Vok};\n' +
       '% nhóm AcI/mệnh đề phụ bọc bằng \\grp{cInf}{nhãn}{...} hoặc \\grp{cKonj}{nhãn}{...};\n' +
       '% đuôi biến cách gạch chân bằng \\en{gốc}{đuôi}.\n' +
+      dictHintLine(s.tokens) +
       line + '\\par\\medskip\n' +
       chunksTable(s.tokens) +
       vtabHint() +
@@ -152,13 +169,18 @@ var SA_TEX = (function () {
 
   function vocabLongtable(vocab) {
     var rows = vocab.map(function (t) {
-      return esc(t) + ' & & & & \\\\';
+      var e = SA.dictLookup(t);
+      return '{\\grt ' + esc(t) + '} & ' + (e ? '{\\grt ' + esc(e.lemma) + '}' : '') +
+        ' & ' + (e ? esc(e.pos) : '') + ' & ' + (e ? esc(e.vi) : '') +
+        ' & ' + (e ? esc(e.en) : '') + ' \\\\';
     }).join('\n');
-    return '% Đánh dấu từ lõi A1–A2 bằng \\textsf{★} trong cột Tiếng Việt.\n' +
+    return '% Từ điển 800 từ (danh sách từ theo Kantharos/Omega): cột được điền sẵn khi tra thấy.\n' +
       '\\begin{longtable}{>{\\grt}l l l l l}\n' +
       '\\textbf{Dạng trong văn bản} & \\textbf{Từ điển} & \\textbf{Từ loại} & ' +
       '\\textbf{Tiếng Việt} & \\textbf{English}\\\\\n\\midrule\n' +
-      rows + '\n\\end{longtable}\n';
+      rows + '\n\\end{longtable}\n' +
+      '{\\small Ô trống: không tra thấy trong từ điển 800 từ – tự tra thêm rồi điền. ' +
+      'Dạng mơ hồ (khớp nhiều từ khác nhau sau khi bỏ dấu thanh) cố ý để trống.}\n';
   }
 
   function patternBoxes() {

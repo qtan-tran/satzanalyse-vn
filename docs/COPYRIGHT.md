@@ -33,4 +33,11 @@ Khi cite hoặc tái sử dụng, ghi công: "Satzanalyse VN – Trần Quốc T
 
 ## 4. Từ điển và dữ liệu đóng gói
 
-Từ điển `data/dict.js` khởi nguồn từ vocabulary của graecum-vn (do chính người sở hữu biên soạn, đã publish CC BY-SA 4.0) + gloss tự biên soạn. Khi mở rộng bằng nguồn ngoài, chỉ dùng từ điển PD hoặc tự biên soạn; ghi nguồn trong phần header comment của data file.
+`data/dict.js` (Phần 2) dùng **danh sách 800 từ thông dụng nhất theo giáo trình Kantharos Neu**, xuất bản trong tài liệu *Omega* của **Ulrich Gebhardt** (Freiburg, CC BY-NC-SA 4.0). Về bản quyền:
+
+- **Danh sách từ** (từ nào + dạng chính) là dữ liệu sự thật, không phải tác phẩm sáng tạo; được tham chiếu để chọn mục từ. Không sao chép gloss tiếng Đức hay trình bày của tài liệu gốc.
+- **Gloss tiếng Việt/English** cho cả 812 mục do người sở hữu **tự biên soạn** từ kiến thức ngôn ngữ chung; do đó nội dung của `data/dict.js` là tác phẩm của Satzanalyse VN, publish kèm repo theo **CC BY-SA 4.0** (giữ nhất quán với lớp nội dung).
+- **Ghi công nguồn danh sách từ** trong header comment của `data/dict.js` và trong `docs/FORMAT-SPEC.md` §5: danh sách từ theo Omega (Ulrich Gebhardt), Kantharos Neu – CC BY-NC-SA 4.0. Ghi công này là điều kiện tốt đẹp (good faith) chứ không phải thuộc tính bắt buộc của license NC, vì repo này phân phối lại danh sách từ (dữ liệu sự thật) chứ không phân phối lại nội dung gốc.
+- Khi mở rộng bằng nguồn ngoài khác: chỉ dùng từ điển PD hoặc tự biên soạn; ghi nguồn trong header comment của data file.
+
+Ghi chú: quy tắc chung ở §2 ("không để lộ tên giáo trình") áp dụng cho nội dung publish thông thường (khung phân tích, pattern, corpus); danh sách từ Phần 2 là ngoại lệ có chủ đích, được ghi công minh bạch như trên.

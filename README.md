@@ -12,9 +12,9 @@ This repository is developed and maintained by **Quoc-Tan Tran**, **Postdoctoral
 ## Luồng sử dụng
 
 1. Dán văn bản Hy Lạp (tối đa **1.500 ký tự** ≈ 15–20 câu mỗi lần) vào ô văn bản.
-2. Tool tách câu, tách khối từ và sinh **khung phân tích**: mỗi câu một khung gồm sơ đồ khối từ ba tầng, bảng "Dịch theo cụm (cách nối nghĩa)", bảng động từ, 7 bước phân tích, bản dịch; cuối là PHẦN 2 từ vựng (theo thứ tự xuất hiện, không lặp), pattern và bảng đuôi.
+2. Tool tách câu, tách khối từ, tra **từ điển 800 từ thông dụng nhất** (danh sách từ theo giáo trình Kantharos Neu/Omega; gloss tiếng Việt–English tự biên soạn) và sinh **khung phân tích**: mỗi câu một khung gồm sơ đồ khối từ ba tầng (nghĩa ngắn hiện dưới mỗi từ khi tra thấy), bảng "Dịch theo cụm (cách nối nghĩa)", bảng động từ, 7 bước phân tích, bản dịch; cuối là PHẦN 2 từ vựng (theo thứ tự xuất hiện, không lặp; cột từ điển/từ loại/nghĩa điền sẵn khi tra thấy), pattern và bảng đuôi.
 3. Tải hai file: `satzanalyse.html` (mở và điền bằng bất kỳ trình soạn thảo nào, in ra PDF qua trình duyệt) và `satzanalyse.tex` (biên dịch qua Overleaf/XeLaTeX – xem trang **Hướng dẫn**).
-4. Phần để trống là **chủ đích của phương pháp**: tool không bịa phân tích; bạn tự điền chức năng câu, dạng hình thái, nghĩa và dịch – từ điển tích hợp (đang xây) sẽ hỗ trợ dần các ô này.
+4. Phần để trống là **chủ đích của phương pháp**: tool không bịa phân tích; dạng không tra thấy trong từ điển (hoặc mơ hồ giữa nhiều từ) để trống cho bạn tự tra và tự điền chức năng câu, dạng hình thái, bản dịch.
 
 ## Vị trí trong hệ sinh thái
 
@@ -31,13 +31,13 @@ index.html            Tool chính
 huong-dan.html        Hướng dẫn sử dụng + cách tự xuất PDF
 corpus.html           Corpus mẫu (đang xây)
 assets/               style.css + engine.js + exporter-html.js + exporter-tex.js
-data/                 (Phần 2) từ điển Hy Lạp–Việt đóng gói client-side
+data/                 (Phần 2) data/dict.js – từ điển 800 từ theo Kantharos Neu/Omega, TSV nhúng client-side
 docs/                 ARCHITECTURE · ROADMAP · COPYRIGHT · FORMAT-SPEC · STYLE-AND-CONVENTIONS
 ```
 
 ## Lộ trình
 
-Xem `docs/ROADMAP.md`: Phần 1 khung + tool MVP ✅ → Phần 2 từ điển Hy Lạp–Việt → Phần 3 gợi ý hình thái (đuôi biến cách/chia) → Phần 4 corpus mẫu từ readings bài 1–10 graecum-vn → Phần 5 Pages + cross-link hai chiều với portal và toolkit.
+Xem `docs/ROADMAP.md`: Phần 1 khung + tool MVP ✅ → Phần 2 từ điển Hy Lạp–Việt (800 từ theo Kantharos Neu/Omega, đã dựng chờ duyệt) → Phần 3 gợi ý hình thái (đuôi biến cách/chia) → Phần 4 corpus mẫu từ readings bài 1–10 graecum-vn → Phần 5 Pages + cross-link hai chiều với portal và toolkit.
 
 ## License
 

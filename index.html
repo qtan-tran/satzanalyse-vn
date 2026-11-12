@@ -24,8 +24,8 @@
 <h2 class="sec">Nhập văn bản</h2>
 
 <div class="hint">Dán văn bản Hy Lạp (giữ nguyên dấu, tối đa <b>1.500 ký tự</b> ≈ 15–20 câu mỗi lần).
-Tool tách câu, tách khối từ và sinh <b>khung phân tích để bạn tự điền</b> – tool không bịa phân tích.
-Xuất PDF thế nào? Xem trang <a href="huong-dan.html">Hướng dẫn</a>.</div>
+Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng nhất</b> (danh sách từ theo giáo trình Kantharos/Omega) để điền sẵn nghĩa, rồi sinh <b>khung phân tích để bạn tự điền phần hình thái và chức năng</b> – tool không bịa phân tích.
+Ô để trống là những chỗ cần bạn phân tích. Xuất PDF thế nào? Xem trang <a href="huong-dan.html">Hướng dẫn</a>.</div>
 
 <div class="err" id="err"></div>
 <div class="ok" id="ok"></div>
@@ -59,6 +59,7 @@ Xuất PDF thế nào? Xem trang <a href="huong-dan.html">Hướng dẫn</a>.</d
     <div class="chips" id="chips"></div>
     Mỗi khối từ trong sơ đồ có ba tầng: <b>chức năng câu</b> (trên) – <b>từ</b> (giữa) – <b>dạng hình thái</b> (dưới).
     Ô chức năng để trống (<span class="gk">…</span>) là nơi bạn tự gán sau khi phân tích.
+    Nếu tra thấy trong từ điển 800 từ, nghĩa tiếng Việt ngắn hiện ngay dưới từ và được điền sẵn vào bảng từ vựng.
   </div>
 </div>
 
@@ -69,6 +70,7 @@ Xuất PDF thế nào? Xem trang <a href="huong-dan.html">Hướng dẫn</a>.</d
 
 </div>
 
+<script src="data/dict.js"></script>
 <script src="assets/engine.js"></script>
 <script src="assets/exporter-html.js"></script>
 <script src="assets/exporter-tex.js"></script>
@@ -158,8 +160,10 @@ Xuất PDF thế nào? Xem trang <a href="huong-dan.html">Hướng dẫn</a>.</d
 
     var nTok = 0;
     model.sentences.forEach(function (s) { nTok += s.tokens.length; });
+    var nHit = model.vocab.filter(function (t) { return SA.dictLookup(t); }).length;
     succeed('Đã nhận: ' + model.sentences.length + ' câu · ' + nTok + ' khối từ · ' +
-            model.vocab.length + ' từ vựng (không lặp). Hai file đã sẵn sàng tải về.');
+            model.vocab.length + ' từ vựng (không lặp), tra từ điển thấy ' + nHit +
+            '. Hai file đã sẵn sàng tải về.');
 
     elSummary.textContent = 'File xuất: ' + lastName + '.html (khung phân tích, tự điền + in ra PDF qua trình duyệt) · ' +
                             lastName + '.tex (biên dịch qua XeLaTeX/Overleaf).';

@@ -18,8 +18,12 @@ Ba repo độc lập về deploy, cross-link nhau: portal giới thiệu tool �
 Người dùng paste văn bản Hy Lạp (≤ 1.500 ký tự)
         │
         ▼
+data/dict.js (nạp trước engine)
+        │      gán window.SA_DICT (TSV 812 mục nhúng chuỗi)
+        ▼
 assets/engine.js        tách Satz (. · ; ! + xuống dòng) → token hóa khối từ
         │                (chỉ ký tự Hy Lạp + apostrophe elision ’ ʼ ')
+        │                dictLookup(token): 3 tầng khoá, không thấy/mơ hồ → null
         ▼
 model dữ liệu trung gian  { title, subtitle, sentences[{n, greek, tokens}],
         │                  vocab[unique theo thứ tự xuất hiện] }
@@ -64,7 +68,7 @@ Preamble `.tex` lấy 1:1 từ định dạng canvas Satzanalyse (macro `\w \en 
 
 ## 5. Kế hoạch dữ liệu đóng gói
 
-- **Phần 2 – từ điển**: `data/dict.js` – chuỗi TSV nhúng trong biến JS, parse bằng `split('\n')` + `split('\t')`. Khởi nguồn từ `vocab/vocab-01-10.tsv` của graecum-vn (186 từ, 8 cột) + gloss các bài; mở rộng cộng dồn theo cụm 10 bài. Tra không thấy → trả về gợi ý đuôi + ô nghĩa để trống (không bịa).
+- **Phần 2 – từ điển** (đã dựng): `data/dict.js` – chuỗi TSV nhúng trong biến JS (`window.SA_DICT`), parse bằng `split('\n')` + `split('\t')` khi lần tra đầu tiên (lazy). 812 mục, 6 cột (lemma/forms/pos/vi/en/keys); danh sách từ = 800 từ thông dụng nhất theo Kantharos Neu (Omega – Ulrich Gebhardt, CC BY-NC-SA 4.0), gloss tiếng Việt/English tự biên soạn (xem `docs/COPYRIGHT.md`). Lookup trong engine: 3 tầng khoá (chính xác → bỏ dấu hút → bỏ dấu thanh, từ ≥ 2 ký tự cơ bản) + 4 mức claim (lemma > keys > forms > weak) – chi tiết đặc tả `docs/FORMAT-SPEC.md` §5. Tra thấy → điền sẵn gloss/bảng từ vựng; không thấy hoặc mơ hồ → trả `null`, ô để trống (không bịa). Gợi ý đuôi thuộc Phần 3.
 - **Phần 3 – gợi ý hình thái**: bảng pattern đuôi (mạo từ, biến cách 1st/2nd/3rd, đuôi động từ các thời/thức) nhúng tương tự trong `data/`; pre-fill ô `form` của `.wb` và bảng đuôi PHẦN 2 bằng gợi ý có nhãn "gợi ý".
 - **Phần 4 – corpus**: `data/corpus/*.js` – các bài phân tích mẫu hoàn chỉnh (làm tay, biên soạn theo pipeline graecum-vn) cho câu dựng từ readings L1–10 graecum-vn (nội dung public domain); `corpus.html` là gallery.
 

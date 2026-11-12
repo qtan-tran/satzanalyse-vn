@@ -44,6 +44,8 @@ var SA_HTML = (function () {
     '.wb .word{font-size:21px;line-height:1.25;color:var(--c);white-space:nowrap}',
     '.wb .word u{text-decoration:none;border-bottom:2.5px solid currentColor;font-weight:700}',
     '.wb .form{font:9.5px/1.2 system-ui,Arial,sans-serif;color:#666}',
+    '.wb .gl{font:italic 10px/1.25 Georgia,\'Times New Roman\',serif;color:#555;',
+    '    max-width:74px;white-space:normal}',
     '.chips{margin:8px 0 4px;line-height:2}',
     '.chip{font:700 12px system-ui,Arial,sans-serif;margin-right:10px;white-space:nowrap}',
     '.star{color:#b8860b}',
@@ -93,14 +95,24 @@ var SA_HTML = (function () {
     }).join('') + '<br>';
   }
 
-  function wbUnknown(token) {
+  /* Gloss ngắn cho Wortblock: nghĩa đầu tiên (trước ";"), cắt còn ~24 ký tự. */
+  function shortGloss(vi) {
+    var g = String(vi).split(';')[0].split(' / ')[0].trim();
+    if (g.length > 24) g = g.slice(0, 24).replace(/\s+\S*$/, '') + '…';
+    return g;
+  }
+
+  function wbBlock(token) {
+    var e = SA.dictLookup(token);
+    var gl = e ? shortGloss(e.vi) : '';
     return '<span class="wb" style="--c:#777"><span class="fn">…</span>' +
       '<span class="word">' + esc(token) + '</span>' +
+      (gl ? '<span class="gl">' + esc(gl) + '</span>' : '') +
       '<span class="form">(dạng?)</span></span>';
   }
 
   function diagram(tokens) {
-    return '<div class="diagram">' + tokens.map(wbUnknown).join('') + '</div>';
+    return '<div class="diagram">' + tokens.map(wbBlock).join('') + '</div>';
   }
 
   function chunksTable(tokens) {
@@ -139,11 +151,18 @@ var SA_HTML = (function () {
 
   function vocabTable(vocab) {
     var rows = vocab.map(function (t) {
-      return '<tr><td class="gk">' + esc(t) + '</td><td></td><td></td><td></td><td></td><td></td></tr>';
+      var e = SA.dictLookup(t);
+      return '<tr><td class="gk">' + esc(t) + '</td><td>' +
+        (e ? esc(e.lemma) : '') + '</td><td>' + (e ? esc(e.pos) : '') +
+        '</td><td>' + (e ? esc(e.vi) : '') + '</td><td>' + (e ? esc(e.en) : '') +
+        '</td><td class="star">' + (e ? '★' : '') + '</td></tr>';
     }).join('');
     return '<table class="vocab">' +
       '<tr><th>Dạng trong văn bản</th><th>Từ điển</th><th>Từ loại</th><th>Tiếng Việt</th>' +
-      '<th>English</th><th>★</th></tr>' + rows + '</table>';
+      '<th>English</th><th>★</th></tr>' + rows + '</table>' +
+      '<p class="note">★ = tra thấy trong từ điển 800 từ (danh sách từ theo Kantharos/Omega). ' +
+      'Dòng trống = không tra thấy: bạn tự tra thêm rồi điền. ' +
+      'Dạng mơ hồ (khớp nhiều từ khác nhau sau khi bỏ dấu thanh) được cố ý để trống.</p>';
   }
 
   function patternBox(n) {
@@ -180,6 +199,8 @@ var SA_HTML = (function () {
       '<div class="box"><div class="bt">Chú giải</div><div class="bb">' + chipRow() +
       'Mỗi khối từ có ba tầng: <b>chức năng câu</b> (trên) – <b>từ</b> (giữa) – <b>dạng hình thái</b> (dưới).<br>' +
       'Nhóm khung (grp): khung bao AcI hoặc mệnh đề phụ, kèm nhãn chức năng (ví dụ: "AcI → tân ngữ đối cách của λέγω").<br>' +
+      'Từ vựng: gloss tiếng Việt ngay dưới mỗi từ (nếu có) và bảng PHẦN 2 được điền sẵn khi tra thấy trong từ điển 800 từ; ' +
+      'không tra thấy thì để trống cho bạn tự điền.<br>' +
       'Sperrstellung (hyphenated attribute position): sở hữu cách xen giữa mạo từ và danh từ ' +
       'tạo ba khối liền nhau: mạo từ | cụm sở hữu cách (định ngữ) | danh từ.<br>' +
       'Bảng "Dịch theo cụm" được chia mặc định ~4 từ/cụm – hãy tự chỉnh lại theo nhóm nghĩa.</div></div>\n' +

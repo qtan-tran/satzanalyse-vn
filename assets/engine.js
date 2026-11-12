@@ -2,6 +2,9 @@
  * Phân tách văn bản Hy Lạp cổ: tách Satz (câu) + token hóa khối từ (Wortblock).
  * Triết lý: KHÔNG bịa phân tích – tool chỉ sinh khung định sẵn;
  * phần không xác định được để trống cho người học tự điền.
+ * Từ điển 800 từ (Phần 2, data/dict.js): tra thấy thì điền sẵn nghĩa,
+ * không thấy thì để trống; dạng mơ hồ (khớp nhiều entry sau khi bỏ dấu)
+ * cũng để trống – đúng nguyên tắc không bịa.
  * Code: MIT License. ES5, không dependency, chạy hoàn toàn client-side. */
 var SA = (function () {
   'use strict';
@@ -80,6 +83,131 @@ var SA = (function () {
     return toks;
   }
 
+  /* ---- Từ điển 800 từ (Phần 2) -------------------------------------------
+   * Nạp tuỳ chọn từ data/dict.js qua window.SA_DICT (thẻ <script> đặt TRƯỚC
+   * engine.js). Engine vẫn chạy đầy đủ khi không có từ điển; dictLookup
+   * chỉ trả về entry khi tra chắc chắn. */
+  var IDX0 = null, IDX1 = null, IDX2 = null, LOOKUP_CACHE = Object.create(null);
+  var AMB = { ambiguous: true };
+  var GREEK_RUN = /[\u0370-\u03FF\u1F00-\u1FFF\u2019\u02BC']+/g;
+  var APOS_TAIL = /[\u2019\u02BC']+$/;
+  /* Mạo từ trần: là dấu nghĩa trong cột forms/keys, không phải dạng của entry. */
+  var ARTICLES = { 'ὁ': 1, 'ἡ': 1, 'τό': 1, 'οἱ': 1, 'αἱ': 1, 'τά': 1 };
+  /* Mức claim của một key (càng cao càng chắc chắn):
+   * 3 = chính là lemma nguyên văn; 2 = keys biên tập/chính tả thay thế;
+   * 1 = dạng trong cột forms (mảnh một từ); 0 = weak: mảnh rút ra từ cụm
+   * nhiều từ (ví dụ công thức "ἦ δ' ὅς" rút ra "ἦ" – phải nhường cho lemma thật). */
+  var KIND_LEMMA = 3, KIND_KEYS = 2, KIND_FORM = 1, KIND_WEAK = 0;
+
+  /* Ba tầng khoá tra:
+   * tier 0 – chính xác (chỉ bỏ apostrophe elision cuối từ);
+   * tier 1 – bỏ dấu hút + iota dưới, GIỮ dấu thanh (ἥ/ἤ phân biệt được ở tier 0);
+   * tier 2 – bỏ mọi dấu thanh (fallback biến thể dấu giữa các bản in, τὸν/τόν).
+   * Tra theo thứ tự; dừng ở tầng đầu tiên KHÔNG SỬA: tra thấy thì trả, chạm AMB
+   * (khớp nhiều từ khác nhau) thì trả null – nguyên tắc không bịa. */
+  function key0(s) {
+    return String(s).toLowerCase().normalize('NFC').replace(APOS_TAIL, '');
+  }
+  function key1(s) {
+    return String(s).toLowerCase().normalize('NFD')
+      .replace(/[\u0313\u0314]/g, '').replace(APOS_TAIL, '');
+  }
+  function key2(s) {
+    return String(s).toLowerCase().normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '').replace(APOS_TAIL, '');
+  }
+
+  function addKey(idx, k, e, kind) {
+    if (!k) return;
+    var cur = idx[k];
+    if (cur === undefined) { idx[k] = { e: e, k: kind }; return; }
+    if (cur === AMB) return;
+    if (cur.e === e) { if (kind > cur.k) cur.k = kind; return; }
+    if (cur.e.lemma === e.lemma) {
+      /* Cùng lemma, nhiều nghĩa (ἄρα, ἦ): gộp gloss, không mất mục. */
+      if (cur.e.vi.indexOf(e.vi) < 0) cur.e.vi = cur.e.vi + ' / ' + e.vi;
+      if (cur.e.en.indexOf(e.en) < 0) cur.e.en = cur.e.en + '; ' + e.en;
+      if (kind > cur.k) cur.k = kind;
+      return;
+    }
+    if (kind > cur.k) { idx[k] = { e: e, k: kind }; return; }
+    if (kind < cur.k) return; /* claim yếu hơn key đã có → nhường */
+    idx[k] = AMB; /* bằng cấp, hai từ khác nhau → mơ hồ, không tự điền */
+  }
+
+  /* Dạng Hy Lạp trong cột forms: mảnh một từ = claim mạnh;
+   * mảnh nhiều từ (có khoảng trắng, kể cả ghi chú Latin như Impf.) = weak. */
+  function formClaims(forms) {
+    var out = [], pieces = String(forms).split(/[,\/;]/), i, j, m, p, strong;
+    for (i = 0; i < pieces.length; i++) {
+      p = pieces[i].trim();
+      if (!p) continue;
+      m = p.match(GREEK_RUN);
+      if (!m) continue;
+      strong = p.indexOf(' ') < 0;
+      for (j = 0; j < m.length; j++) {
+        out.push({ w: m[j], kind: strong ? KIND_FORM : KIND_WEAK });
+      }
+    }
+    return out;
+  }
+
+  function buildDictIndex() {
+    IDX0 = Object.create(null); IDX1 = Object.create(null); IDX2 = Object.create(null);
+    var lines = window.SA_DICT.tsv.split('\n'), i, j, c, e, parts, claims, w;
+    for (i = 0; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      c = lines[i].split('\t');
+      if (c.length < 5) continue;
+      e = { lemma: c[0], forms: c[1], pos: c[2], vi: c[3], en: c[4] };
+      claims = [];
+      if (e.lemma.indexOf('/') >= 0) {
+        /* lemma có " / ": mỗi phần một từ là chính tả thay thế (σεαυτοῦ / σαυτοῦ);
+         * phần nhiều từ (công thức ἦ δ' ὅς) không claim gì cả. */
+        parts = e.lemma.split('/');
+        for (j = 0; j < parts.length; j++) {
+          if (parts[j].trim() && parts[j].trim().indexOf(' ') < 0) {
+            claims.push({ w: parts[j].trim(), kind: KIND_KEYS });
+          }
+        }
+      } else {
+        claims.push({ w: e.lemma, kind: KIND_LEMMA });
+      }
+      claims.push.apply(claims, formClaims(e.forms));
+      if (c[5]) {
+        parts = c[5].trim().split(/\s+/);
+        for (j = 0; j < parts.length; j++) claims.push({ w: parts[j], kind: KIND_KEYS });
+      }
+      for (j = 0; j < claims.length; j++) {
+        w = claims[j].w;
+        if (ARTICLES[w] && e.pos !== 'mạo từ') continue;
+        addKey(IDX0, key0(w), e, claims[j].kind);
+        addKey(IDX1, key1(w), e, claims[j].kind);
+        addKey(IDX2, key2(w), e, claims[j].kind);
+      }
+    }
+  }
+
+  /* Tra một token trong văn bản. Trả về entry hoặc null (không thấy/mơ hồ). */
+  function dictLookup(token) {
+    if (!window.SA_DICT || !window.SA_DICT.tsv) return null;
+    if (!IDX0) buildDictIndex();
+    if (Object.prototype.hasOwnProperty.call(LOOKUP_CACHE, token)) {
+      return LOOKUP_CACHE[token];
+    }
+    var hit = IDX0[key0(token)];
+    if (hit === undefined) hit = IDX1[key1(token)];
+    if (hit === undefined) {
+      /* Tier 2 chỉ dùng cho từ ≥ 2 ký tự cơ bản: từ 1 âm tiết (ἦ/ἡ, ὁ/ὅ)
+       * phân biệt nhau chủ yếu bằng dấu hút – bỏ dấu sẽ bịa kết quả. */
+      var k2 = key2(token);
+      if (k2.length >= 2) hit = IDX2[k2];
+    }
+    var e = (hit && hit !== AMB) ? hit.e : null;
+    LOOKUP_CACHE[token] = e;
+    return e;
+  }
+
   /* Phân tích bản thị: trả về model cho hai exporter, hoặc mã lỗi thân thiện. */
   function analyze(raw, opts) {
     opts = opts || {};
@@ -116,6 +244,7 @@ var SA = (function () {
 
   return {
     LIMIT: LIMIT, FN: FN, COLORS: COLORS, STEPS: STEPS,
-    analyze: analyze, splitSentences: splitSentences, tokenize: tokenize
+    analyze: analyze, splitSentences: splitSentences, tokenize: tokenize,
+    dictLookup: dictLookup
   };
 })();
