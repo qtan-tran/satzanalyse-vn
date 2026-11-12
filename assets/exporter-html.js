@@ -2,6 +2,9 @@
  * Sinh bản xuất HTML tĩnh tự chứa (không <script>) theo đặc tả FORMAT-SPEC §2:
  * khung satz, sơ đồ khối từ .wb ba tầng, bảng "Dịch theo cụm", vtab, 7 bước,
  * PHẦN 2 (vocab ★ / pattern / bảng đuôi), CSS in sẵn (mỗi câu một trang).
+ * Corpus mẫu (Phần 4, FORMAT-SPEC §9): build(model, fill) nhận fill tuỳ chọn
+ * {hint, vi, sentences[], patterns[]} điền sẵn chức năng/dạng/gloss/bảng/
+ * bản dịch/ô Pattern cho câu mẫu; không có fill thì sinh khung để trống như cũ.
  * Code: MIT License. ES5, không dependency. */
 var SA_HTML = (function () {
   'use strict';
@@ -109,33 +112,70 @@ var SA_HTML = (function () {
     return esc(m.a) + (m.conf < 2 ? ' ?' : '');
   }
 
-  function wbBlock(token) {
+  /* Khối từ cho corpus mẫu (Phần 4, FORMAT-SPEC §9): sf = fill của câu,
+   * có thể điền sẵn fn (chức năng), form (dạng chính xác, không "?"),
+   * gl (gloss tiếng Việt). Token xuất hiện lần thứ n (n >= 2) trong câu
+   * được tra bằng khóa "token#n", lần đầu bằng nguyên token. */
+  function fnByKey(k) {
+    for (var i = 0; i < SA.FN.length; i++) if (SA.FN[i].k === k) return SA.FN[i];
+    return null;
+  }
+
+  function wbBlock(token, sf, counts) {
+    counts[token] = (counts[token] || 0) + 1;
+    var key = counts[token] === 1 ? token : token + '#' + counts[token];
     var e = SA.dictLookup(token);
     var m = SA.morphLookup(token, e);
-    var gl = e ? shortGloss(e.vi) : '';
-    return '<span class="wb" style="--c:#777"><span class="fn">…</span>' +
+    var fnRec = sf && sf.fn ? fnByKey(sf.fn[key]) : null;
+    var color = fnRec ? SA.COLORS[fnRec.k] : '#777';
+    var gl = sf && sf.gl && sf.gl[key] !== undefined ? String(sf.gl[key]) :
+      (e ? shortGloss(e.vi) : '');
+    var formTx = sf && sf.form && sf.form[key] !== undefined ?
+      esc(sf.form[key]) : formText(m);
+    return '<span class="wb" style="--c:' + color + '">' +
+      '<span class="fn">' + (fnRec ? esc(fnRec.vi) : '…') + '</span>' +
       '<span class="word">' + esc(token) + '</span>' +
       (gl ? '<span class="gl">' + esc(gl) + '</span>' : '') +
-      '<span class="form">' + formText(m) + '</span></span>';
+      '<span class="form">' + formTx + '</span></span>';
   }
 
-  function diagram(tokens) {
-    return '<div class="diagram">' + tokens.map(wbBlock).join('') + '</div>';
+  function diagram(tokens, sf) {
+    var counts = Object.create(null);
+    return '<div class="diagram">' + tokens.map(function (t) {
+      return wbBlock(t, sf, counts);
+    }).join('') + '</div>';
   }
 
-  function chunksTable(tokens) {
-    var rows = chunk(tokens).map(function (c) {
-      return '<tr><td class="gk">' + esc(c.join(' ')) + '</td><td></td><td></td></tr>';
-    }).join('');
+  function chunksTable(tokens, sf) {
+    var rows;
+    if (sf && sf.chunks) {
+      rows = sf.chunks.map(function (c) {
+        return '<tr><td class="gk">' + esc(c[0]) + '</td><td>' + esc(c[1]) +
+          '</td><td>' + esc(c[2]) + '</td></tr>';
+      }).join('');
+    } else {
+      rows = chunk(tokens).map(function (c) {
+        return '<tr><td class="gk">' + esc(c.join(' ')) + '</td><td></td><td></td></tr>';
+      }).join('');
+    }
     return '<table class="chunks"><caption class="cap">Dịch theo cụm (cách nối nghĩa)</caption>' +
       '<tr><th>Cụm từ (Hy Lạp)</th><th>English</th><th>Tiếng Việt</th></tr>' + rows + '</table>';
   }
 
-  function vtab() {
+  function vtab(sf) {
+    var rows, hint;
+    if (sf && sf.vtab && sf.vtab.length) {
+      rows = sf.vtab.map(function (r) {
+        return '<tr>' + r.map(function (c) { return '<td>' + esc(c) + '</td>'; }).join('') + '</tr>';
+      }).join('');
+    } else if (sf && sf.vtab) {
+      rows = '<tr><td colspan="8" class="hintcell">(câu không có dạng động từ được chia – kiểm tra ellipse)</td></tr>';
+    } else {
+      rows = '<tr><td colspan="8" class="hintcell">(điền các dạng động từ được chia của câu vào đây)</td></tr>';
+    }
     return '<table class="vtab">' +
       '<tr><th>Dạng</th><th>Từ điển</th><th>Ngôi</th><th>Số</th><th>Thời</th><th>Thức</th>' +
-      '<th>Thể</th><th>Chủ ngữ</th></tr>' +
-      '<tr><td colspan="8" class="hintcell">(điền các dạng động từ được chia của câu vào đây)</td></tr>' +
+      '<th>Thể</th><th>Chủ ngữ</th></tr>' + rows +
       '</table>';
   }
 
@@ -145,26 +185,34 @@ var SA_HTML = (function () {
       '</ol>';
   }
 
-  function uebBox() {
+  function uebBox(sf) {
+    var w = sf && sf.woertlich !== undefined ? esc(sf.woertlich) : '';
+    var n = sf && sf.vi !== undefined ? esc(sf.vi) : '';
     return '<div class="ueb"><span class="lab">Bản dịch</span><br>' +
-      '<em>bản sát nghĩa (wörtlich):</em> <br><em>bản tự nhiên (natürlich):</em> <b></b></div>';
+      '<em>bản sát nghĩa (wörtlich):</em> ' + w + ' <br><em>bản tự nhiên (natürlich):</em> <b>' + n + '</b></div>';
   }
 
-  function satzBlock(s) {
+  function satzBlock(s, sf) {
     return '<div class="satz"><div class="head">Câu ' + s.n +
       ' – <span class="gk">' + esc(s.greek) + '</span></div><div class="body">' +
-      diagram(s.tokens) + chunksTable(s.tokens) + vtab() + stepsList() +
-      '<p class="note">Ghi chú: </p>' + uebBox() + '</div></div>';
+      diagram(s.tokens, sf) + chunksTable(s.tokens, sf) + vtab(sf) + stepsList() +
+      '<p class="note">Ghi chú: ' + (sf && sf.note ? esc(sf.note) : '') + '</p>' +
+      uebBox(sf) + '</div></div>';
   }
 
-  function vocabTable(vocab) {
+  /* Bảng từ vựng; với corpus mẫu (tf = dạng + gloss tác giả theo token
+   * lần đầu xuất hiện) cột "Dạng (gợi ý)" được chốt theo phân tích mẫu
+   * (không "?"), gloss tiếng Việt lấy từ tác giả khi từ điển không tra thấy. */
+  function vocabTable(vocab, tf) {
     var rows = vocab.map(function (t) {
       var e = SA.dictLookup(t);
       var m = SA.morphLookup(t, e);
+      var formTx = tf && tf.form[t] !== undefined ? esc(tf.form[t]) : formText(m);
+      var viTx = e ? esc(e.vi) : (tf && tf.gl[t] !== undefined ? esc(tf.gl[t]) : '');
       return '<tr><td class="gk">' + esc(t) + '</td><td>' +
         (e ? esc(e.lemma) : '') + '</td><td>' + (e ? esc(e.pos) : '') +
-        '</td><td>' + formText(m) +
-        '</td><td>' + (e ? esc(e.vi) : '') + '</td><td>' + (e ? esc(e.en) : '') +
+        '</td><td>' + formTx +
+        '</td><td>' + viTx + '</td><td>' + (e ? esc(e.en) : '') +
         '</td><td class="star">' + (e ? '★' : '') + '</td></tr>';
     }).join('');
     return '<table class="vocab">' +
@@ -176,7 +224,16 @@ var SA_HTML = (function () {
       'Cột "Dạng (gợi ý)": đoán theo bảng đuôi L1–10; dấu "?" = hãy kiểm chứng.</p>';
   }
 
-  function patternBox(n) {
+  /* Pattern box: không có fill → ô bài tập (prompt rỗng cho người học);
+   * có fill (corpus mẫu) → điền sẵn Ví dụ/Quy tắc/Mẹo nhận diện. */
+  function patternBox(n, p) {
+    if (p) {
+      return '<div class="pat"><div class="pt">Pattern ' + n + '</div><div class="pb">' +
+      '<b class="q">Ví dụ:</b> ' + esc(p.vi || '') + '<br>' +
+      '<b class="q">Quy tắc:</b> ' + esc(p.rule || '') + '<br>' +
+      '<b class="q">Mẹo nhận diện:</b> ' + esc(p.tip || '') +
+      '</div></div>';
+    }
     return '<div class="pat"><div class="pt">Pattern ' + n + '</div><div class="pb">' +
       '<b class="q">Ví dụ:</b> <br><b class="q">Quy tắc:</b> <br><b class="q">Mẹo nhận diện:</b> ' +
       '</div></div>';
@@ -214,15 +271,44 @@ var SA_HTML = (function () {
       'Dạng đóng (mạo từ, đại từ quen thuộc, εἰμί) không có đuôi nên không nằm ở đây.</p>';
   }
 
-  function build(model) {
+  /* build(model, fill): fill tuỳ chọn của corpus mẫu (Phần 4, FORMAT-SPEC §9):
+   * { hint, vi, sentences: [sf mỗi câu theo thứ tự] }. Không có fill → khung
+   * để trống cho người học tự điền, như đặc tả §2. */
+  function build(model, fill) {
     var title = model.title || 'Satzanalyse';
     var sub = model.subtitle || 'Phân tích câu tiếng Hy Lạp cổ';
     var orig = model.sentences.map(function (s) {
       return '(' + s.n + ') <span class="gk">' + esc(s.greek) + '</span>';
     }).join('<br>');
 
-    var satz = model.sentences.map(satzBlock).join('\n');
-    var pats = [1, 2, 3].map(patternBox).join('\n');
+    var satz = model.sentences.map(function (s, i) {
+      return satzBlock(s, fill && fill.sentences ? fill.sentences[i] : null);
+    }).join('\n');
+    var fillPats = fill && fill.patterns ? fill.patterns : [];
+    var pats = [0, 1, 2].map(function (i) {
+      return patternBox(i + 1, fillPats[i]);
+    }).join('\n');
+    var focus = fill && fill.hint ? esc(fill.hint) :
+      'Khung sinh tự động bởi Satzanalyse VN – các ô để trống dành cho bạn tự điền';
+    var fullVi = fill && fill.vi ? esc(fill.vi) : '';
+
+    /* tf: dạng + gloss tác giả cho lần đầu xuất hiện mỗi token (bảng vocab). */
+    var tf = null;
+    if (fill && fill.sentences) {
+      tf = { form: Object.create(null), gl: Object.create(null) };
+      model.sentences.forEach(function (s, i) {
+        var sf = fill.sentences[i];
+        if (!sf) return;
+        s.tokens.forEach(function (t) {
+          if (tf.form[t] === undefined && sf.form && sf.form[t] !== undefined) {
+            tf.form[t] = sf.form[t];
+          }
+          if (tf.gl[t] === undefined && sf.gl && sf.gl[t] !== undefined) {
+            tf.gl[t] = sf.gl[t];
+          }
+        });
+      });
+    }
 
     return '<!doctype html>\n<html lang="vi">\n<head>\n<meta charset="UTF-8">\n' +
       '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
@@ -231,7 +317,7 @@ var SA_HTML = (function () {
       '<div class="hint no-print">In ra PDF: <b>Ctrl/Cmd+P → Save as PDF</b> (CSS in sẵn: mỗi câu một trang). ' +
       'Xuất PDF LaTeX: biên dịch file .tex đi kèm qua XeLaTeX (xem trang Hướng dẫn của Satzanalyse VN).</div>\n' +
       '<h1>' + esc(title) + '</h1>\n<div class="sub">' + esc(sub) + '</div>\n' +
-      '<div class="focus">Khung sinh tự động bởi Satzanalyse VN – các ô để trống dành cho bạn tự điền</div>\n' +
+      '<div class="focus">' + focus + '</div>\n' +
       '<div class="box"><div class="bt">Văn bản gốc</div><div class="bb orig">' + orig + '</div></div>\n' +
       '<div class="box"><div class="bt">Chú giải</div><div class="bb">' + chipRow() +
       'Mỗi khối từ có ba tầng: <b>chức năng câu</b> (trên) – <b>từ</b> (giữa) – <b>dạng hình thái</b> (dưới).<br>' +
@@ -247,9 +333,9 @@ var SA_HTML = (function () {
       'Bảng "Dịch theo cụm" được chia mặc định ~4 từ/cụm – hãy tự chỉnh lại theo nhóm nghĩa.</div></div>\n' +
       '<h2 class="sec">PHẦN 1 – Phân tích trực quan: từng câu một</h2>\n' +
       satz + '\n' +
-      '<div class="box"><div class="bt">Bản dịch toàn văn</div><div class="bb"></div></div>\n' +
+      '<div class="box"><div class="bt">Bản dịch toàn văn</div><div class="bb">' + fullVi + '</div></div>\n' +
       '<h2 class="sec">PHẦN 2 – Từ vựng và Pattern</h2>\n' +
-      vocabTable(model.vocab) + '\n' + pats + '\n' +
+      vocabTable(model.vocab, tf) + '\n' + pats + '\n' +
       '<h3 style="font-family:system-ui,Arial,sans-serif;font-size:15.5px;margin:18px 0 8px">' +
       'Bảng đuôi</h3>\n' + endungenTable(model.vocab) + '\n' +
       '<footer class="cr">Satzanalyse VN · Biên soạn bởi Trần Quốc Tân · Nội dung CC BY-SA 4.0 · Code MIT<br>' +

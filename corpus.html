@@ -5,6 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Corpus – Satzanalyse VN</title>
 <link rel="stylesheet" href="assets/style.css">
+<style>
+.ccard{border:1px solid #b9c4d6;border-radius:8px;margin:14px 0;background:#fff;overflow:hidden}
+.ccard .ch{background:#e3ecf8;padding:8px 14px;border-bottom:1px solid #c5d5ee;font:700 14px/1.4 system-ui,Arial,sans-serif}
+.ccard .ch .src{font:400 12px/1.4 system-ui,Arial,sans-serif;color:#4a5568}
+.ccard .cb{padding:10px 14px}
+.ccard .gk{font-size:18px;line-height:1.6}
+.ccard .vi{color:#333;margin:4px 0 8px;font-size:14px}
+.ccard .btns{margin-top:6px}
+.ccard button{font:700 13.5px system-ui,Arial,sans-serif;padding:7px 14px;border:0;border-radius:5px;background:#1F5FBF;color:#fff;cursor:pointer;margin-right:8px}
+.ccard button.ghost{background:#fff;color:#1F5FBF;border:1px solid #1F5FBF}
+.ccard button:hover{background:#174a9e}
+.ccard button.ghost:hover{background:#eef4fd}
+.ccard .viewwrap{margin-top:10px}
+.ccard iframe{width:100%;height:620px;border:1px solid #ccd4e0;border-radius:5px;background:#fff}
+.lesson{margin:26px 0 6px;font:700 16px/1.3 system-ui,Arial,sans-serif;border-bottom:2px solid #1F5FBF;padding-bottom:3px;color:#174a9e}
+.count{font-size:13.5px;color:#444;margin:10px 0}
+</style>
 </head>
 <body>
 <div class="page">
@@ -21,22 +38,12 @@
   </nav>
 </header>
 
-<h2 class="sec">Corpus mẫu – đang xây dựng</h2>
+<h2 class="sec">Corpus mẫu L1–10</h2>
 
-<div class="hint">Corpus mẫu sẽ ra mắt ở <b>Phần 4</b> của lộ trình (xem <code>docs/ROADMAP.md</code>). Trong lúc chờ, bạn đã có thể dán câu bất kỳ vào trang <a href="index.html">Công cụ</a>.</div>
+<div class="hint">Mỗi câu mẫu đi kèm <b>khung phân tích đầy đủ</b>: chức năng câu, dạng hình thái (không còn dấu "?"), gloss, bảng "Dịch theo cụm", bảng động từ, bản dịch, ghi chú ngữ pháp và 3 ô <b>Pattern</b> (Ví dụ / Quy tắc / Mẹo nhận diện) làm gương phương pháp. Cách học: dán câu vào trang <a href="index.html">Công cụ</a>, tự điền khung của bạn, rồi mở bản mẫu để <b>đối chiếu</b>.</div>
 
-<h3 class="subsec">Corpus sẽ gồm những gì?</h3>
-<ul class="flow">
-  <li><b>Câu mẫu có phân tích đầy đủ</b>: mỗi câu trong corpus đi kèm khung đã điền hoàn chỉnh (chức năng, dạng hình thái, bảng động từ, bảng "Dịch theo cụm", bản dịch) – làm gương cho việc tự điền khung, và là bài tập "đối chiếu" sau khi bạn tự phân tích.</li>
-  <li><b>Nguồn câu</b>: dựng mới từ readings của bài 1–10 <a href="https://qtan-tran.github.io/graecum-vn/" target="_blank">Graecum VN</a> (văn bản gốc public domain: Longos, Plutarch, Platon, Xenophon, Aristides, Diogenes Laertios, Athenaios, Parthenios…) và câu tự biên soạn theo khuôn ngữ pháp đã học. Không sao chép nội dung adapted của giáo trình bản quyền.</li>
-  <li><b>Tổ chức theo bài</b>: mỗi bài học một nhóm câu, kèm nhãn trọng tâm ngữ pháp (bài 4: AcI; bài 11: imperfect; bài 15: mệnh đề quan hệ…) để luyện đúng chủ điểm.</li>
-</ul>
-
-<h3 class="subsec">Cách dùng corpus khi ra mắt</h3>
-<ul class="flow">
-  <li>Dán câu corpus vào trang Công cụ → tự điền khung → mở bản phân tích mẫu để đối chiếu.</li>
-  <li>Hoặc đọc trực tiếp bản mẫu trên trang này như một bài giảng phân tích trực quan.</li>
-</ul>
+<p class="count" id="count"></p>
+<div id="corpus-list"><noscript>Trang corpus cần JavaScript. Bạn vẫn có thể dán câu vào trang Công cụ.</noscript></div>
 
 <footer class="site">
   Satzanalyse VN · Biên soạn bởi Trần Quốc Tân · Nội dung CC BY-SA 4.0 · Code MIT<br>
@@ -44,5 +51,110 @@
 </footer>
 
 </div>
+<script src="data/dict.js"></script>
+<script src="data/morph.js"></script>
+<script src="data/corpus.js"></script>
+<script src="assets/engine.js"></script>
+<script src="assets/exporter-html.js"></script>
+<script>
+/* Corpus gallery: dựng danh sách theo bài từ window.SA_CORPUS;
+ * mỗi câu render lười (chỉ khi bấm "Xem khung") qua SA_HTML.build(model, fill). */
+(function () {
+  'use strict';
+  var C = window.SA_CORPUS;
+  var list = document.getElementById('corpus-list');
+  if (!C || !C.items || !C.items.length) {
+    list.textContent = 'Chưa có câu mẫu nào.';
+    return;
+  }
+  document.getElementById('count').textContent = C.items.length + ' câu mẫu · bài 1–10 (graecum-vn)';
+
+  var frag = document.createDocumentFragment();
+  var lastLesson = -1;
+
+  C.items.forEach(function (it, i) {
+    if (it.lesson !== lastLesson) {
+      var h = document.createElement('h3');
+      h.className = 'lesson';
+      h.textContent = 'Bài ' + it.lesson + ' (graecum-vn L' + it.lesson + ')';
+      frag.appendChild(h);
+      lastLesson = it.lesson;
+    }
+
+    var card = document.createElement('div');
+    card.className = 'ccard';
+    var head = document.createElement('div');
+    head.className = 'ch';
+    head.innerHTML = 'Câu mẫu ' + (i + 1) + ' – trọng tâm: ' +
+      String(it.focus).replace(/&/g, '&amp;').replace(/</g, '&lt;') +
+      '<br><span class="src">Nguồn: ' + String(it.source).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>';
+    var body = document.createElement('div');
+    body.className = 'cb';
+    var gk = document.createElement('div');
+    gk.className = 'gk';
+    gk.textContent = it.greek;
+    var vi = document.createElement('div');
+    vi.className = 'vi';
+    vi.textContent = 'Bản dịch: ' + it.vi;
+    var btns = document.createElement('div');
+    btns.className = 'btns';
+    var bView = document.createElement('button');
+    bView.textContent = 'Xem khung phân tích đầy đủ';
+    var bDl = document.createElement('button');
+    bDl.className = 'ghost';
+    bDl.textContent = 'Tải HTML';
+    btns.appendChild(bView);
+    btns.appendChild(bDl);
+
+    var view = document.createElement('div');
+    view.className = 'viewwrap';
+    view.hidden = true;
+    var frame = document.createElement('iframe');
+    frame.title = 'Khung phân tích – ' + it.title;
+    view.appendChild(frame);
+
+    function buildHtml() {
+      var model = SA.analyze(it.greek, { title: it.title, subtitle: it.subtitle });
+      var fill = {
+        hint: 'Khung mẫu có phân tích đầy đủ (Corpus Satzanalyse VN) – tự điền khung của bạn ở trang Công cụ rồi đối chiếu.',
+        vi: it.vi,
+        sentences: it.sentences,
+        patterns: it.patterns
+      };
+      return SA_HTML.build(model, fill);
+    }
+
+    bView.addEventListener('click', function () {
+      if (frame.getAttribute('data-built') !== '1') {
+        frame.srcdoc = buildHtml();
+        frame.setAttribute('data-built', '1');
+      }
+      view.hidden = !view.hidden;
+      bView.textContent = view.hidden ? 'Xem khung phân tích đầy đủ' : 'Ẩn khung phân tích';
+    });
+
+    bDl.addEventListener('click', function () {
+      var blob = new Blob([buildHtml()], { type: 'text/html;charset=utf-8' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'satzanalyse-corpus-L' + it.lesson + '.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    });
+
+    body.appendChild(gk);
+    body.appendChild(vi);
+    body.appendChild(btns);
+    body.appendChild(view);
+    card.appendChild(head);
+    card.appendChild(body);
+    frag.appendChild(card);
+  });
+
+  list.appendChild(frag);
+})();
+</script>
 </body>
 </html>

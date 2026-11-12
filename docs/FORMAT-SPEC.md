@@ -1,6 +1,6 @@
-# FORMAT-SPEC – đặc tả khung phân tích (v1.2, Phần 1–3)
+# FORMAT-SPEC – đặc tả khung phân tích (v1.3, Phần 1–4)
 
-> Đặc tả cấu trúc hai định dạng xuất song song từ cùng một model dữ liệu, theo đúng cấu trúc canvas Satzanalyse hiện tại + quy ước bổ sung (bảng "Dịch theo cụm" sau mỗi diagram, gloss nghĩa trong Wortblöcke, từ điển tích hợp Phần 2 – xem §5; gợi ý hình thái Phần 3 – xem §6). Không render PDF trong tool; người dùng tự xuất (xem `huong-dan.html`).
+> Đặc tả cấu trúc hai định dạng xuất song song từ cùng một model dữ liệu, theo đúng cấu trúc canvas Satzanalyse hiện tại + quy ước bổ sung (bảng "Dịch theo cụm" sau mỗi diagram, gloss nghĩa trong Wortblöcke, từ điển tích hợp Phần 2 – xem §5; gợi ý hình thái Phần 3 – xem §6; corpus mẫu Phần 4 – xem §9). Không render PDF trong tool; người dùng tự xuất (xem `huong-dan.html`).
 
 ## 0. Input & model dữ liệu
 
@@ -144,5 +144,19 @@ Cùng lemma gặp ở nhiều mục nghĩa (ἄρα, ἤ) → **gộp gloss** b�
 ## 8. Lộ trình mở rộng đặc tả (thay đổi versioned)
 
 - v1.1 (Phần 2): từ điển tích hợp `data/dict.js` (chi tiết quy tắc ở §5): pre-fill cột Từ điển/Từ loại/Tiếng Việt/English/★ khi tra thấy; gloss ngắn trong Wortblock; không thấy/mơ hồ → để trống.
-- v1.2 (Phần 3, hiện hành): gợi ý hình thái `data/morph.js` (chi tiết ở §6): dạng đóng conf 2 ghi thẳng, đoán theo đuôi conf 1 kèm "?"; cột "Dạng (gợi ý)" trong bảng vocab (HTML 7 cột / longtable 6 cột); bảng đuôi sinh tự động; comment `% Gợi ý hình thái` trong .tex.
-- v2 (Phần 4): định dạng data corpus JS (bài phân tích mẫu hoàn chỉnh) + gallery.
+- v1.2 (Phần 3): gợi ý hình thái `data/morph.js` (chi tiết ở §6): dạng đóng conf 2 ghi thẳng, đoán theo đuôi conf 1 kèm "?"; cột "Dạng (gợi ý)" trong bảng vocab (HTML 7 cột / longtable 6 cột); bảng đuôi sinh tự động; comment `% Gợi ý hình thái` trong .tex.
+- v1.3 (Phần 4, hiện hành): corpus mẫu `data/corpus.js` + fill API của exporter HTML (chi tiết ở §9): 10 câu mẫu L1–10 biên soạn tay (kèm 3 ô Pattern/câu), gallery `corpus.html`, xuất HTML pre-fill qua `{hint, vi, sentences[], patterns[]}`; .tex fill là lộ trình (chưa làm).
+
+## 9. Corpus mẫu L1–10 (v1.3, Phần 4)
+
+**Data file**: `data/corpus.js` gán `window.SA_CORPUS = { version, items[] }`; nạp sau `data/morph.js`, trước `assets/engine.js`. Mỗi item: `{ lesson, title, subtitle, focus, source, greek, vi, patterns, sentences[] }` – `greek` là toàn văn bản (1–2 câu), `vi` bản dịch toàn khối, `patterns` là 3 ô Pattern `{vi, rule, tip}` (Ví dụ/Quy tắc/Mẹo nhận diện) làm gương phương pháp, `sentences[]` là fill của exporter (truyền thẳng vào `SA_HTML.build(model, fill)`).
+
+**Mỗi phần tử sentences (fill 1 câu)**: `{ fn, form, gl, chunks, vtab, woertlich, vi, note }` – `fn`/`form`/`gl` là map token → giá trị pre-fill (chức năng câu, dạng, gloss); `chunks` bảng khối từ 3 cột; `vtab` bảng 8 ô (thời/khóc/cách/ngôi... theo cấu trúc PHẦN 1, rỗng → hiển thị hint kiểm tra ellipse); `woertlich` bản dịch từng từ; `vi` dịch câu; `note` ghi chú điểm ngữ pháp (tuỳ chọn).
+
+**Quy ước khóa #n**: token đầu tiên trong câu dùng nguyên token làm khóa; lần gặp thứ n (n ≥ 2) dùng `token#n` (ví dụ `ὁ#2`, `ἦν#3`). Khóa phải khớp accent thực tế trong `greek` (grave ↔ acute theo vị trí) – test tự động bắt lỗi bằng cách token hóa lại `greek` và đối chiếu thứ tự.
+
+**Nguyên tắc biên soạn**: 1 câu/bài L1–10, bám cấu trúc + từ vựng bài đọc graecum-vn (L8 theo Plutarch Lykourgos, L9 theo Xenophon Agesilaos – câu dựng mới theo tinh thần bài đọc, không copy; L6 dùng John 1:1 nguyên văn, public domain). Mọi phân tích làm tay, không tự sinh; lemma chính nằm trong từ điển 800 từ (tra được); từ ngoài danh sách ghi gloss trực tiếp trong fill. Vocab hiển thị dạng chốt (không "?") vì phân tích do tác giả duyệt; gloss tác giả ghi đè khi từ điển trống.
+
+**Fill API (exporter HTML)**: `SA_HTML.build(model, fill)` với fill `{ hint, vi, sentences[], patterns[] }`. Không có fill (hoặc fill thiếu ô) → khung để trống/prompt rỗng như Phần 3; vtab rỗng → hint kiểm tra ellipse; `vocabTable(vocab, tf)` nhận dạng chốt (không "?") + gloss tác giả khi từ điển trống; `patterns[]` điền sẵn 3 ô Pattern, thiếu thì render prompt rỗng cho người học.
+
+**Gallery `corpus.html`**: nạp dict → morph → corpus → engine → exporter-html; nhóm theo bài; render lười (khung phân tích đầy đủ trong iframe `srcdoc` chỉ khi bấm xem); nút tải HTML từng câu (Blob). Exporter HTML giữ tương thích ngược: `build(model)` không fill vẫn hoạt động như Phần 3.

@@ -29,16 +29,17 @@ This repository is developed and maintained by **Quoc-Tan Tran**, **Postdoctoral
 ```
 index.html            Tool chính
 huong-dan.html        Hướng dẫn sử dụng + cách tự xuất PDF
-corpus.html           Corpus mẫu (đang xây)
+corpus.html           Corpus mẫu L1–10: 10 câu phân tích đầy đủ làm gương (gallery, tải HTML từng câu)
 assets/               style.css + engine.js + exporter-html.js + exporter-tex.js
 data/                 data/dict.js (Phần 2) – từ điển 800 từ Kantharos/Omega, TSV nhúng client-side
                       data/morph.js (Phần 3) – bảng hình thái L1–10: dạng đóng + bảng đuôi danh từ/động từ
+                      data/corpus.js (Phần 4) – 10 câu mẫu L1–10, phân tích làm tay + fill cho exporter
 docs/                 ARCHITECTURE · ROADMAP · COPYRIGHT · FORMAT-SPEC · STYLE-AND-CONVENTIONS
 ```
 
 ## Lộ trình
 
-Xem `docs/ROADMAP.md`: Phần 1 khung + tool MVP ✅ → Phần 2 từ điển Hy Lạp–Việt (800 từ theo Kantharos Neu/Omega) ✅ → Phần 3 gợi ý hình thái (đuôi biến cách/chia; đã dựng chờ duyệt) → Phần 4 corpus mẫu từ readings bài 1–10 graecum-vn → Phần 5 Pages + cross-link hai chiều với portal và toolkit.
+Xem `docs/ROADMAP.md`: Phần 1 khung + tool MVP ✅ → Phần 2 từ điển Hy Lạp–Việt (800 từ theo Kantharos Neu/Omega) ✅ → Phần 3 gợi ý hình thái (đuôi biến cách/chia) ✅ commit `8b4912a` → Phần 4 corpus mẫu từ readings bài 1–10 graecum-vn (đã dựng chờ duyệt) → Phần 5 Pages + cross-link hai chiều với portal và toolkit.
 
 ## License
 
