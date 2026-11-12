@@ -1,6 +1,6 @@
-# FORMAT-SPEC – đặc tả khung phân tích (v1.1, Phần 1–2)
+# FORMAT-SPEC – đặc tả khung phân tích (v1.2, Phần 1–3)
 
-> Đặc tả cấu trúc hai định dạng xuất song song từ cùng một model dữ liệu, theo đúng cấu trúc canvas Satzanalyse hiện tại + quy ước bổ sung (bảng "Dịch theo cụm" sau mỗi diagram, gloss nghĩa trong Wortblöcke, từ điển tích hợp Phần 2 – xem §6). Không render PDF trong tool; người dùng tự xuất (xem `huong-dan.html`).
+> Đặc tả cấu trúc hai định dạng xuất song song từ cùng một model dữ liệu, theo đúng cấu trúc canvas Satzanalyse hiện tại + quy ước bổ sung (bảng "Dịch theo cụm" sau mỗi diagram, gloss nghĩa trong Wortblöcke, từ điển tích hợp Phần 2 – xem §5; gợi ý hình thái Phần 3 – xem §6). Không render PDF trong tool; người dùng tự xuất (xem `huong-dan.html`).
 
 ## 0. Input & model dữ liệu
 
@@ -39,7 +39,7 @@ Màu chuẩn (dùng chung cả hai định dạng + UI tool): Prad `#1F5FBF`, Su
 4. Khung **"Chú giải"** (đúng scope khung Chú giải của skill bản cập nhật: ba tầng của khối từ + giải thích nhóm + quy tắc Sperrstellung): dải `.chip` 14 chức năng; giải thích ba tầng của khối từ; **giải thích nhóm (grp)**: khung bao AcI hoặc mệnh đề phụ kèm nhãn chức năng (ví dụ: "AcI → tân ngữ đối cách của λέγω"); quy tắc Sperrstellung (sở hữu cách xen giữa mạo từ và danh từ → ba khối liền: mạo từ | cụm sở hữu cách (định ngữ) | danh từ); ghi chú bảng cụm chia mặc định ~4 từ, tự chỉnh theo nhóm nghĩa.
 5. `h2` **PHẦN 1 – Phân tích trực quan: từng câu một**; mỗi câu một khung `.satz`:
    - head "Câu n – [câu Hy Lạp]";
-   - diagram: mỗi token một `.wb` (fn `…`, word = token, gl = gloss tiếng Việt ngắn khi tra thấy trong từ điển – xem §6, form `(dạng?)`);
+   - diagram: mỗi token một `.wb` (fn `…`, word = token, gl = gloss tiếng Việt ngắn khi tra thấy trong từ điển – xem §5, form = gợi ý hình thái – xem §6: dạng đóng ghi thẳng, đoán theo đuôi kèm " ?", không đoán được thì `(dạng?)`);
    - **bảng `.chunks` "Dịch theo cụm (cách nối nghĩa)"** 3 cột: Cụm từ (Hy Lạp) | English | Tiếng Việt – cột Hy Lạp pre-fill theo cụm ~4 từ, hai cột còn lại để trống;
    - `.vtab` 8 cột (Dạng | Từ điển | Ngôi | Số | Thời | Thức | Thể | Chủ ngữ) + 1 dòng hint "(điền các dạng động từ được chia của câu vào đây)";
    - `ol.steps`: 7 dòng prefilled = prompt gợi nhớ phương pháp (xem §4);
@@ -47,9 +47,9 @@ Màu chuẩn (dùng chung cả hai định dạng + UI tool): Prad `#1F5FBF`, Su
    - `.ueb`: bản sát nghĩa / bản tự nhiên để trống.
 6. Khung **"Bản dịch toàn văn"** để trống.
 7. `h2` **PHẦN 2 – Từ vựng và Pattern**:
-   - bảng `.vocab` 6 cột (Dạng trong văn bản | Từ điển | Từ loại | Tiếng Việt | English | ★), pre-fill cột Dạng theo thứ tự xuất hiện, không lặp; khi tra thấy trong từ điển (§6) các cột Từ điển/Từ loại/Tiếng Việt/English được điền sẵn và cột ★ đánh dấu `★`; không tra thấy → các ô để trống cho người học tự điền; chú thích dưới bảng giải thích điều này;
+   - bảng `.vocab` 7 cột (Dạng trong văn bản | Từ điển | Từ loại | Dạng (gợi ý) | Tiếng Việt | English | ★), pre-fill cột Dạng theo thứ tự xuất hiện, không lặp; khi tra thấy trong từ điển (§5) các cột Từ điển/Từ loại/Tiếng Việt/English được điền sẵn và cột ★ đánh dấu `★`; cột Dạng (gợi ý) điền theo §6; không tra thấy → các ô để trống cho người học tự điền; chú thích dưới bảng giải thích điều này;
    - 3 khung `.pat` rỗng (Ví dụ → Quy tắc → Mẹo nhận diện);
-   - bảng đuôi 3 cột (Đuôi | Nhận biết dạng | Ví dụ trong văn bản) + dòng trống.
+   - bảng đuôi 3 cột (Đuôi | Nhận biết dạng | Ví dụ trong văn bản) sinh **tự động** từ gợi ý hình thái (§6): mỗi đuôi nhận diện được một dòng, ví dụ tối đa 3 từ, tối đa 12 dòng (phần dư ghi chú "còn N đuôi"); dạng đóng không có đuôi nên không vào bảng; chú thích dưới bảng: mọi dòng là gợi ý cần kiểm chứng.
 8. Footer ghi công chuẩn.
 9. `@media print`: mỗi `.satz` một trang (`page-break-before:always`), trừ khung đầu.
 
@@ -58,22 +58,23 @@ Màu chuẩn (dùng chung cả hai định dạng + UI tool): Prad `#1F5FBF`, Su
 - Preamble lấy **1:1** từ định dạng canvas (fontspec FreeSerif/DejaVu, macro `\w \en \grp \chip`, môi trường `satz vtab steps ueb pat` – không đổi macro). Ngay sau preamble thêm block `\renewcommand{\labKEY}{nhãn tiếng Việt}` cho 14 key ở §1 (macro giữ nguyên, chỉ đổi nội dung nhãn; quy ước portal: không thuật ngữ Đức trong bản publish).
 - Thân tài liệu: `center` tiêu đề/mô tả → khung `satz` "Văn bản gốc" (câu đánh số, `{\grt …}`) → khung `satz` "Chú giải" (dải `\chip`, giải thích ba tầng + nhóm `\grp` + Sperrstellung) → `\clearpage` `section*` PHẦN 1 → mỗi câu: `\begin{satz}{Câu n – {\grt …}}` chứa:
   - comment hướng dẫn điền `\w{KEY}{Khối từ}{Dạng}`;
-  - comment `% Gợi ý từ điển …` liệt kê gloss các token tra thấy trong từ điển (§6; không có token nào tra thấy thì không có dòng này);
+  - comment `% Gợi ý từ điển …` liệt kê gloss các token tra thấy trong từ điển (§5; không có token nào tra thấy thì không có dòng này);
+  - comment `% Gợi ý hình thái …` liệt kê dạng đoán được của các token (§6; không token nào thì không có dòng này);
   - dòng phân tích tạm: `{\gr token1 token2 …}`;
   - bảng "Dịch theo cụm (cách nối nghĩa)": `tabular` 3 cột `>{\grt}l l l` (2 `&` mỗi dòng), tiêu đề nhỏ đậm;
   - `\vtab{…}`: 1 dòng hint multicolumn (7 `&` tương đương 8 cột khi điền);
   - `\steps{…}` 7 item prompt;
   - dòng Ghi chú; `\ueb{…}{…}` để trống.
 - Sau câu cuối: khung "Bản dịch toàn văn" → `\clearpage` `section*` PHẦN 2:
-  - vocab `longtable` 5 cột `>{\grt}l l l l l` (4 `&`): Dạng trong văn bản | Từ điển | Từ loại | Tiếng Việt | English; cột Từ điển/Từ loại/Tiếng Việt/English pre-fill khi tra thấy (lemma trong `{\grt …}`), không thấy → ô trống; dòng chú thích sau bảng giải thích ô trống = tự tra thêm;
+  - vocab `longtable` 6 cột `>{\grt}l l l l l l` (5 `&`): Dạng trong văn bản | Từ điển | Từ loại | Dạng (gợi ý) | Tiếng Việt | English; cột Từ điển/Từ loại/Tiếng Việt/English pre-fill khi tra thấy (lemma trong `{\grt …}`), cột Dạng (gợi ý) pre-fill theo §6, không thấy → ô trống; dòng chú thích sau bảng giải thích ô trống = tự tra thêm;
   - 3 khung `pat` rỗng;
-  - bảng đuôi `tabular` 3 cột (2 `&`).
+  - bảng đuôi `tabular` 3 cột (2 `&`, cột Ví dụ `>{\grt}l`), sinh tự động như §2.7.
 - `\end{document}`.
 
 ### Kiểm tra tĩnh (chạy cho mọi file .tex sinh ra)
 
 - Cân bằng `{}`; cặp `\begin{…}`/`\end{…}` bằng nhau.
-- Số `&` mỗi dòng: vtab 7 (8 cột), vocab 4 (5 cột), bảng đuôi 2 (3 cột), bảng cụm 2 (3 cột).
+- Số `&` mỗi dòng: vtab 7 (8 cột), vocab 5 (6 cột), bảng đuôi 2 (3 cột), bảng cụm 2 (3 cột).
 - Không có ký tự ASCII `'` trong chuỗi Hy Lạp (dùng `’ U+2019`); không em dash (chỉ en dash –).
 
 ## 4. Bảy bước (prefilled như prompt trong khung, cả hai định dạng)
@@ -117,14 +118,31 @@ Cùng lemma gặp ở nhiều mục nghĩa (ἄρα, ἤ) → **gộp gloss** b�
 
 **Nguồn danh sách từ**: 800 từ thông dụng nhất theo giáo trình Kantharos Neu (Omega – Ulrich Gebhardt, CC BY-NC-SA 4.0; xem `docs/COPYRIGHT.md`). Gloss tiếng Việt/English tự biên soạn cho Satzanalyse VN.
 
-## 6. Kiểm tra tĩnh từ điển (chạy cho mọi lần build data)
+## 6. Gợi ý hình thái (v1.2, Phần 3)
+
+**Data file**: `data/morph.js` gán `window.SA_MORPH = { version, exact, noun, verb }`; nạp qua `<script src="data/morph.js">` **sau** `data/dict.js`, **trước** `assets/engine.js`. Engine chạy đầy đủ khi thiếu file; API `SA.morphLookup(token, entry)` trả `{ cat, a, e, conf }` hoặc `null` (entry = kết quả `dictLookup`, tuỳ chọn).
+
+**exact – dạng đóng (conf 2)**: mạo từ đủ 17 dạng, đại từ quan hệ, εἰμί (hiện tại/quá khứ/tương lai, đủ biến thể grave/acute), αὐτός, đại từ ngôi (ἐγώ/σύ/ἡμεῖς/ὑμεῖς + các cách), οὗτος, đại từ nghi vấn. Tra bằng key0 + hai biến thể grave↔acute của dấu ở âm cuối (hình thức biến thiên theo vị trí: τὸν/τόν, ἐστὶν/ἐστίν). Nhận dạng đóng → ghi thẳng, **không** dấu "?".
+
+**Bảng đuôi (conf 1)**: `noun` – đuôi danh từ/tính từ/đại từ, ch 1/2/3 (đuôi mơ hồ ghi **tối đa 2 khả năng** tách " / ", khả năng cao nhất đứng đầu – quy ước chốt để không rối não người học; ví dụ -ας = Gen. Sg. f. / Acc. Pl. f.); `verb` – hiện tại/quá khứ/aorist/tương lai, chủ động + TD/BN, nguyên mẫu, gồm biến thể ν di động (σεν, ουσιν, σιν, εν). Khớp đuôi dài → ngắn trên chuỗi đã bỏ mọi dấu thanh + iota dưới; gốc phải còn ≥ 2 ký tự cơ bản. Mọi kết quả theo đuôi **là gợi ý**, xuất kèm "?".
+
+**Gate theo từ loại** (dùng entry): pos chứa danh từ/tính từ/đại từ/số từ → bảng noun; chứa động từ → bảng verb; tiểu từ/trạng từ/liên từ/giới từ/mạo từ/công thức dẫn thoại → `null` (không đoán). Không có entry (không tra thấy) → thử bảng noun trước (danh từ gặp nhiều hơn), không khớp mới thử bảng verb; mọi kết quả **tối đa 2 khả năng**, khả năng cao nhất đứng đầu – không gộp dàn trải làm rối người học.
+
+**Iota dưới sau nguyên âm cuối (ῃ/ᾳ/ῳ)**: Dat. Sg. (ch 1/2) hoặc 2 Sg. hiện tại TD/BN – cùng hình thức; gate quyết định liệt kê cái nào, không entry thì liệt kê cả hai.
+
+**Xuất**: ô form của `.wb` (HTML), comment `% Gợi ý hình thái` mỗi câu (.tex), cột "Dạng (gợi ý)" của bảng vocab (HTML 7 cột / longtable 6 cột), bảng đuôi PHẦN 2 tự động (khóa = đuôi + phân tích, ví dụ tối đa 3 từ, tối đa 12 dòng). Viết tắt chuẩn: Sg./Pl., m./f./n., Nom./Gen./Dat./Acc., ch 1/2/3, TD/BN – định nghĩa trong Chú giải của cả hai định dạng.
+
+**Phạm vi**: L1–10 (chỉ định hiện tại/quá khứ/aorist/tương lai + nguyên mẫu). Chưa phủ: mệnh lệnh, phân từ, hoàn thành, kép đôi, cách giả định; động từ -μι chỉ nhận diện qua exact/dict, không đoán đuôi.
+
+## 7. Kiểm tra tĩnh từ điển & hình thái (chạy cho mọi lần build data)
 
 - Mỗi dòng 5–6 cột tab; không ô trống trong 5 cột đầu; không ASCII `'` trong nội dung; không em dash.
 - `node --check data/dict.js`; test thực thi lookup (hit/miss/mơ hồ/elision/gộp nghĩa) – xem work dir trong Knowledge topic.
-- Smoke test bằng đoạn văn thật (Xenophon/NT): miss phải là từ điển không có (để trống), không có hit sai.
+- `node --check data/morph.js`; test thực thi morphLookup (dạng đóng/grave–acute/iota dưới/gate từ loại/gộp khả năng/ν di động/exporter).
+- Smoke test bằng đoạn văn thật (Xenophon/NT): miss phải là từ điển không có (để trống), không có hit sai; gợi ý hình thái sai dạng thì phải có "?" (đuôi mơ hồ: tối đa 2 khả năng, cao nhất đứng đầu), không được ghi đơn nghĩa sai.
 
-## 7. Lộ trình mở rộng đặc tả (thay đổi versioned)
+## 8. Lộ trình mở rộng đặc tả (thay đổi versioned)
 
-- v1.1 (Phần 2): từ điển tích hợp `data/dict.js` (chi tiết quy tắc ở §5): pre-fill cột Từ điển/Từ loại/Tiếng Việt/English/★ khi tra thấy; gloss ngắn trong Wortblock; không thấy/mơ hồ → để trống. Gợi ý đuôi chuyển sang v1.2.
-- v1.2 (Phần 3): pre-fill ô form của `.wb`/`\w` bằng gợi ý đuôi có nhãn "gợi ý"; bảng đuôi PHẦN 2 sinh tự động từ các đuôi gặp trong văn bản.
+- v1.1 (Phần 2): từ điển tích hợp `data/dict.js` (chi tiết quy tắc ở §5): pre-fill cột Từ điển/Từ loại/Tiếng Việt/English/★ khi tra thấy; gloss ngắn trong Wortblock; không thấy/mơ hồ → để trống.
+- v1.2 (Phần 3, hiện hành): gợi ý hình thái `data/morph.js` (chi tiết ở §6): dạng đóng conf 2 ghi thẳng, đoán theo đuôi conf 1 kèm "?"; cột "Dạng (gợi ý)" trong bảng vocab (HTML 7 cột / longtable 6 cột); bảng đuôi sinh tự động; comment `% Gợi ý hình thái` trong .tex.
 - v2 (Phần 4): định dạng data corpus JS (bài phân tích mẫu hoàn chỉnh) + gallery.

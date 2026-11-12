@@ -39,5 +39,6 @@ Khi cite hoặc tái sử dụng, ghi công: "Satzanalyse VN – Trần Quốc T
 - **Gloss tiếng Việt/English** cho cả 812 mục do người sở hữu **tự biên soạn** từ kiến thức ngôn ngữ chung; do đó nội dung của `data/dict.js` là tác phẩm của Satzanalyse VN, publish kèm repo theo **CC BY-SA 4.0** (giữ nhất quán với lớp nội dung).
 - **Ghi công nguồn danh sách từ** trong header comment của `data/dict.js` và trong `docs/FORMAT-SPEC.md` §5: danh sách từ theo Omega (Ulrich Gebhardt), Kantharos Neu – CC BY-NC-SA 4.0. Ghi công này là điều kiện tốt đẹp (good faith) chứ không phải thuộc tính bắt buộc của license NC, vì repo này phân phối lại danh sách từ (dữ liệu sự thật) chứ không phân phối lại nội dung gốc.
 - Khi mở rộng bằng nguồn ngoài khác: chỉ dùng từ điển PD hoặc tự biên soạn; ghi nguồn trong header comment của data file.
+- `data/morph.js` (Phần 3): bảng dạng đóng và bảng đuôi **tự biên soạn hoàn toàn** từ ngữ pháp Hy Lạp chuẩn (danh sách đuôi biến cách/chia là ngữ pháp sự thật, không sao chép trình bày nguồn nào); nội dung thuộc Satzanalyse VN, publish theo **CC BY-SA 4.0** cùng lớp nội dung, không phụ thuộc nguồn ngoài.
 
 Ghi chú: quy tắc chung ở §2 ("không để lộ tên giáo trình") áp dụng cho nội dung publish thông thường (khung phân tích, pattern, corpus); danh sách từ Phần 2 là ngoại lệ có chủ đích, được ghi công minh bạch như trên.

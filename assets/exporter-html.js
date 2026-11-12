@@ -102,13 +102,21 @@ var SA_HTML = (function () {
     return g;
   }
 
+  /* Ô dạng hình thái: dạng đóng đoán chắc thì ghi thẳng; đoán theo đuôi
+   * gắn "?" để kiểm chứng; không đoán được thì giữ "(dạng?)". */
+  function formText(m) {
+    if (!m) return '(dạng?)';
+    return esc(m.a) + (m.conf < 2 ? ' ?' : '');
+  }
+
   function wbBlock(token) {
     var e = SA.dictLookup(token);
+    var m = SA.morphLookup(token, e);
     var gl = e ? shortGloss(e.vi) : '';
     return '<span class="wb" style="--c:#777"><span class="fn">…</span>' +
       '<span class="word">' + esc(token) + '</span>' +
       (gl ? '<span class="gl">' + esc(gl) + '</span>' : '') +
-      '<span class="form">(dạng?)</span></span>';
+      '<span class="form">' + formText(m) + '</span></span>';
   }
 
   function diagram(tokens) {
@@ -152,17 +160,20 @@ var SA_HTML = (function () {
   function vocabTable(vocab) {
     var rows = vocab.map(function (t) {
       var e = SA.dictLookup(t);
+      var m = SA.morphLookup(t, e);
       return '<tr><td class="gk">' + esc(t) + '</td><td>' +
         (e ? esc(e.lemma) : '') + '</td><td>' + (e ? esc(e.pos) : '') +
+        '</td><td>' + formText(m) +
         '</td><td>' + (e ? esc(e.vi) : '') + '</td><td>' + (e ? esc(e.en) : '') +
         '</td><td class="star">' + (e ? '★' : '') + '</td></tr>';
     }).join('');
     return '<table class="vocab">' +
-      '<tr><th>Dạng trong văn bản</th><th>Từ điển</th><th>Từ loại</th><th>Tiếng Việt</th>' +
-      '<th>English</th><th>★</th></tr>' + rows + '</table>' +
+      '<tr><th>Dạng trong văn bản</th><th>Từ điển</th><th>Từ loại</th>' +
+      '<th>Dạng (gợi ý)</th><th>Tiếng Việt</th><th>English</th><th>★</th></tr>' + rows + '</table>' +
       '<p class="note">★ = tra thấy trong từ điển 800 từ (danh sách từ theo Kantharos/Omega). ' +
       'Dòng trống = không tra thấy: bạn tự tra thêm rồi điền. ' +
-      'Dạng mơ hồ (khớp nhiều từ khác nhau sau khi bỏ dấu thanh) được cố ý để trống.</p>';
+      'Dạng mơ hồ (khớp nhiều từ khác nhau sau khi bỏ dấu thanh) được cố ý để trống. ' +
+      'Cột "Dạng (gợi ý)": đoán theo bảng đuôi L1–10; dấu "?" = hãy kiểm chứng.</p>';
   }
 
   function patternBox(n) {
@@ -171,10 +182,36 @@ var SA_HTML = (function () {
       '</div></div>';
   }
 
-  function endungenTable() {
+  /* Bảng đuôi tự động: mỗi đuôi nhận diện được một dòng (đuôi, cách nhận
+   * biết, ví dụ). Dạng đóng (mạo từ, đại từ quen thuộc, εἰμί) không có đuôi
+   * nên không vào đây; tối đa 12 dòng, phần còn lại tự ghi thêm. */
+  function endungenTable(vocab) {
+    var seen = Object.create(null), keys = [];
+    vocab.forEach(function (t) {
+      var e = SA.dictLookup(t);
+      var m = SA.morphLookup(t, e);
+      if (!m || !m.e) return;
+      var k = m.e + '|' + m.a;
+      if (!seen[k]) { seen[k] = { e: m.e, a: m.a, ex: [] }; keys.push(k); }
+      var ex = seen[k].ex;
+      if (ex.indexOf(t) < 0 && ex.length < 3) ex.push(t);
+    });
+    var rows = keys.slice(0, 12).map(function (k) {
+      var r = seen[k];
+      return '<tr><td>-' + esc(r.e) + '</td><td>' + esc(r.a) +
+        ' ?</td><td class="gk">' + esc(r.ex.join(', ')) + '</td></tr>';
+    }).join('');
+    var tail = '';
+    if (keys.length === 0) {
+      tail = '<tr><td colspan="3" class="hintcell">(chưa nhận diện được đuôi nào – tự ghi lại đuôi bạn gặp)</td></tr>';
+    } else if (keys.length > 12) {
+      tail = '<tr><td colspan="3" class="hintcell">… còn ' + (keys.length - 12) +
+        ' đuôi nữa – tự ghi thêm theo mẫu trên</td></tr>';
+    }
     return '<table><tr><th>Đuôi</th><th>Nhận biết dạng</th><th>Ví dụ trong văn bản</th></tr>' +
-      '<tr><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td></tr>' +
-      '<tr><td></td><td></td><td></td></tr></table>';
+      rows + tail + '</table>' +
+      '<p class="note">Bảng tự động theo bảng đuôi L1–10: mọi dòng đều là gợi ý – hãy kiểm chứng. ' +
+      'Dạng đóng (mạo từ, đại từ quen thuộc, εἰμί) không có đuôi nên không nằm ở đây.</p>';
   }
 
   function build(model) {
@@ -201,6 +238,10 @@ var SA_HTML = (function () {
       'Nhóm khung (grp): khung bao AcI hoặc mệnh đề phụ, kèm nhãn chức năng (ví dụ: "AcI → tân ngữ đối cách của λέγω").<br>' +
       'Từ vựng: gloss tiếng Việt ngay dưới mỗi từ (nếu có) và bảng PHẦN 2 được điền sẵn khi tra thấy trong từ điển 800 từ; ' +
       'không tra thấy thì để trống cho bạn tự điền.<br>' +
+      'Gợi ý hình thái: ô dạng kết thúc "?" là đoán theo đuôi – kiểm chứng rồi mới dùng; ' +
+      'điểm dễ nhầm thì 2 khả năng (tách " / "), khả năng cao nhất đứng đầu; "(dạng?)" = chưa đoán được. ' +
+      'Viết tắt: Sg./Pl. = số ít/số nhiều; m./f./n. = đực/cái/trung; Nom./Gen./Dat./Acc. = chủ/sở hữu/tặng/đối cách; ' +
+      'ch 1/2/3 = biến cách thứ nhất/hai/ba; TD/BN = thể trung/bị động.<br>' +
       'Sperrstellung (hyphenated attribute position): sở hữu cách xen giữa mạo từ và danh từ ' +
       'tạo ba khối liền nhau: mạo từ | cụm sở hữu cách (định ngữ) | danh từ.<br>' +
       'Bảng "Dịch theo cụm" được chia mặc định ~4 từ/cụm – hãy tự chỉnh lại theo nhóm nghĩa.</div></div>\n' +
@@ -210,7 +251,7 @@ var SA_HTML = (function () {
       '<h2 class="sec">PHẦN 2 – Từ vựng và Pattern</h2>\n' +
       vocabTable(model.vocab) + '\n' + pats + '\n' +
       '<h3 style="font-family:system-ui,Arial,sans-serif;font-size:15.5px;margin:18px 0 8px">' +
-      'Bảng đuôi</h3>\n' + endungenTable() + '\n' +
+      'Bảng đuôi</h3>\n' + endungenTable(model.vocab) + '\n' +
       '<footer class="cr">Satzanalyse VN · Biên soạn bởi Trần Quốc Tân · Nội dung CC BY-SA 4.0 · Code MIT<br>' +
       'Khi cite hoặc tái sử dụng, ghi công: "Satzanalyse VN – Trần Quốc Tân, ' +
       'https://github.com/qtan-tran/satzanalyse-vn"</footer>\n' +

@@ -112,6 +112,7 @@ var SA_TEX = (function () {
       'Nhóm khung (\\grp): khung bao AcI (cInf) hoặc mệnh đề phụ (cKonj) kèm nhãn chức năng.\\\\\n' +
       'Sperrstellung (hyphenated attribute position): sở hữu cách xen giữa mạo từ và danh từ ' +
       'tạo ba khối liền nhau: mạo từ | cụm sở hữu cách (định ngữ) | danh từ.\\\\\n' +
+      'Gợi ý hình thái (Phần 3): "?" = đoán theo đuôi – kiểm chứng; điểm dễ nhầm thì 2 khả năng (tách " / "), khả năng cao nhất đứng đầu. Viết tắt: Sg./Pl. = số ít/số nhiều; m./f./n. = đực/cái/trung; Nom./Gen./Dat./Acc. = chủ/sở hữu/tặng/đối cách; ch 1/2/3 = biến cách thứ nhất/hai/ba; TD/BN = thể trung/bị động.\\\\\n' +
       'Bảng "Dịch theo cụm" chia mặc định $\\sim$4 từ/cụm – hãy tự chỉnh lại theo nhóm nghĩa.\n' +
       '\\end{satz}\n';
   }
@@ -150,6 +151,22 @@ var SA_TEX = (function () {
       hits.join('; ') + '\n';
   }
 
+  /* Gợi ý hình thái cho mỗi câu (comment trong .tex, không ảnh hưởng macro). */
+  function morphHintLine(tokens) {
+    var hits = [], seen = Object.create(null);
+    tokens.forEach(function (t) {
+      var e = SA.dictLookup(t);
+      var m = SA.morphLookup(t, e);
+      if (m && !seen[t] && hits.length < 10) {
+        seen[t] = 1;
+        hits.push(t + ' = ' + m.a + (m.conf < 2 ? ' (gợi ý, kiểm chứng)' : ''));
+      }
+    });
+    if (!hits.length) return '';
+    return '% Gợi ý hình thái (bảng đuôi L1–10; dạng đóng chắc chắn, còn lại đoán theo đuôi): ' +
+      hits.join('; ') + '\n';
+  }
+
   function satzBlock(s) {
     var line = '{\\gr ' + s.tokens.map(esc).join(' ') + '}';
     return '\\begin{satz}{Câu ' + s.n + ' – {\\grt ' + esc(s.greek) + '}}\n' +
@@ -158,6 +175,7 @@ var SA_TEX = (function () {
       '% nhóm AcI/mệnh đề phụ bọc bằng \\grp{cInf}{nhãn}{...} hoặc \\grp{cKonj}{nhãn}{...};\n' +
       '% đuôi biến cách gạch chân bằng \\en{gốc}{đuôi}.\n' +
       dictHintLine(s.tokens) +
+      morphHintLine(s.tokens) +
       line + '\\par\\medskip\n' +
       chunksTable(s.tokens) +
       vtabHint() +
@@ -170,17 +188,20 @@ var SA_TEX = (function () {
   function vocabLongtable(vocab) {
     var rows = vocab.map(function (t) {
       var e = SA.dictLookup(t);
+      var m = SA.morphLookup(t, e);
       return '{\\grt ' + esc(t) + '} & ' + (e ? '{\\grt ' + esc(e.lemma) + '}' : '') +
-        ' & ' + (e ? esc(e.pos) : '') + ' & ' + (e ? esc(e.vi) : '') +
-        ' & ' + (e ? esc(e.en) : '') + ' \\\\';
+        ' & ' + (e ? esc(e.pos) : '') +
+        ' & ' + (m ? esc(m.a) + (m.conf < 2 ? ' ?' : '') : '') +
+        ' & ' + (e ? esc(e.vi) : '') + ' & ' + (e ? esc(e.en) : '') + ' \\\\';
     }).join('\n');
     return '% Từ điển 800 từ (danh sách từ theo Kantharos/Omega): cột được điền sẵn khi tra thấy.\n' +
-      '\\begin{longtable}{>{\\grt}l l l l l}\n' +
+      '\\begin{longtable}{>{\\grt}l l l l l l}\n' +
       '\\textbf{Dạng trong văn bản} & \\textbf{Từ điển} & \\textbf{Từ loại} & ' +
-      '\\textbf{Tiếng Việt} & \\textbf{English}\\\\\n\\midrule\n' +
+      '\\textbf{Dạng (gợi ý)} & \\textbf{Tiếng Việt} & \\textbf{English}\\\\\n\\midrule\n' +
       rows + '\n\\end{longtable}\n' +
       '{\\small Ô trống: không tra thấy trong từ điển 800 từ – tự tra thêm rồi điền. ' +
-      'Dạng mơ hồ (khớp nhiều từ khác nhau sau khi bỏ dấu thanh) cố ý để trống.}\n';
+      'Dạng mơ hồ (khớp nhiều từ khác nhau sau khi bỏ dấu thanh) cố ý để trống. ' +
+      'Cột "Dạng (gợi ý)": đoán theo bảng đuôi L1–10; dấu "?" = kiểm chứng.}\n';
   }
 
   function patternBoxes() {
@@ -193,10 +214,32 @@ var SA_TEX = (function () {
     return out.join('\n');
   }
 
-  function endungenTable() {
-    return '\\begin{tabular}{l l l}\n' +
+  /* Bảng đuôi tự động (từ gợi ý hình thái L1–10; dạng đóng không có đuôi). */
+  function endungenTable(vocab) {
+    var seen = Object.create(null), keys = [];
+    vocab.forEach(function (t) {
+      var e = SA.dictLookup(t);
+      var m = SA.morphLookup(t, e);
+      if (!m || !m.e) return;
+      var k = m.e + '|' + m.a;
+      if (!seen[k]) { seen[k] = { e: m.e, a: m.a, ex: [] }; keys.push(k); }
+      var ex = seen[k].ex;
+      if (ex.indexOf(t) < 0 && ex.length < 3) ex.push(t);
+    });
+    var rows = keys.slice(0, 12).map(function (k) {
+      var r = seen[k];
+      return '-' + esc(r.e) + ' & ' + esc(r.a) + ' ? & {\\grt ' + esc(r.ex.join(', ')) + '} \\\\';
+    }).join('\n');
+    var tail = '';
+    if (keys.length === 0) {
+      tail = '\\multicolumn{3}{l}{\\small (chưa nhận diện được đuôi nào – tự ghi lại đuôi bạn gặp)} \\\\';
+    } else if (keys.length > 12) {
+      tail = '\\multicolumn{3}{l}{\\small … còn ' + (keys.length - 12) + ' đuôi nữa – tự ghi thêm} \\\\';
+    }
+    return '% Bảng đuôi tự động: mọi dòng là gợi ý – kiểm chứng.\n' +
+      '\\begin{tabular}{l l >{\\grt}l}\n' +
       '\\textbf{Đuôi} & \\textbf{Nhận biết dạng} & \\textbf{Ví dụ trong văn bản}\\\\\n\\midrule\n' +
-      ' & & \\\\ & & \\\\ & & \\\\\n\\end{tabular}\n';
+      rows + '\n' + tail + '\n\\end{tabular}\n';
   }
 
   function build(model) {
@@ -214,7 +257,7 @@ var SA_TEX = (function () {
       '\\begin{satz}{Bản dịch toàn văn}\n(điền bản dịch trọn văn bản)\n\\end{satz}\n\n' +
       '\\clearpage\n\\section*{PHẦN 2 – Từ vựng và Pattern}\n\n' +
       vocabLongtable(model.vocab) + '\n\n' + patternBoxes() + '\n\n' +
-      endungenTable() + '\n' +
+      endungenTable(model.vocab) + '\n' +
       '\\end{document}\n';
   }
 

@@ -5,6 +5,8 @@
  * Từ điển 800 từ (Phần 2, data/dict.js): tra thấy thì điền sẵn nghĩa,
  * không thấy thì để trống; dạng mơ hồ (khớp nhiều entry sau khi bỏ dấu)
  * cũng để trống – đúng nguyên tắc không bịa.
+ * Gợi ý hình thái (Phần 3, data/morph.js): dạng đóng nhận chắc chắn;
+ * đuôi biến cách/chia chỉ là gợi ý (gắn "?") để người học kiểm chứng.
  * Code: MIT License. ES5, không dependency, chạy hoàn toàn client-side. */
 var SA = (function () {
   'use strict';
@@ -208,6 +210,128 @@ var SA = (function () {
     return e;
   }
 
+  /* ---- Gợi ý hình thái (Phần 3, data/morph.js) ---------------------------
+   * Bảng dạng đóng (mạo từ, đại từ, εἰμί) + bảng đuôi L1–10. Kết quả
+   * conf 1 (đoán theo đuôi) là GỢI Ý – exporter gắn "?" để người học kiểm
+   * chứng; từ loại tra được từ từ điển (entry) quyết định chọn bảng đuôi
+   * danh từ hay động từ. Không đoán được loại → thử bảng danh từ trước
+   * (danh từ gặp nhiều hơn), không khớp mới thử bảng động từ; mọi kết quả
+   * tối đa 2 khả năng, khả năng cao nhất đứng đầu. */
+  var MORPH_NOUN = null, MORPH_VERB = null, MORPH_CACHE = Object.create(null);
+
+  /* Đổi dấu của âm cuối: acute (0301) ↔ grave (0300) – hình thức biến thiên
+   * theo vị trí trong câu (τὸν/τόν, ἐστὶν/ἐστίν) nên phải tra cả hai chiều. */
+  function swapLastAccent(s, from, to) {
+    var d = s.normalize('NFD'), i = d.length - 1;
+    while (i >= 0) {
+      if (d.charAt(i) === from) {
+        return (d.slice(0, i) + to + d.slice(i + 1)).normalize('NFC');
+      }
+      i--;
+    }
+    return s;
+  }
+
+  function morphInit() {
+    var M = window.SA_MORPH;
+    if (!M) return false;
+    var byLen = function (a, b) { return b[0].length - a[0].length; };
+    MORPH_NOUN = M.noun.slice().sort(byLen);
+    MORPH_VERB = M.verb.slice().sort(byLen);
+    return true;
+  }
+
+  /* Khớp đuôi trên chuỗi đã bỏ dấu; gốc phải còn >= 2 ký tự (tránh đoán
+   * nhầm từ quá ngắn). Trả về [đuôi, phân tích] hoặc null. */
+  function morphMatch(list, bare) {
+    var i, e;
+    for (i = 0; i < list.length; i++) {
+      e = list[i][0];
+      if (bare.length >= e.length + 2 && bare.slice(-e.length) === e) return list[i];
+    }
+    return null;
+  }
+
+  function posIsNounLike(pos) {
+    return /danh từ|tính từ|đại từ|số từ/.test(pos);
+  }
+
+  /* Cắt kết quả còn tối đa 2 khả năng (khả năng cao nhất đứng đầu). */
+  function cap2(a) {
+    var parts = String(a).split(' / ');
+    return parts.length > 2 ? parts.slice(0, 2).join(' / ') : a;
+  }
+
+  /* Nguyên âm cuối kèm iota dưới (ῃ/ᾳ/ῳ): Dat. Sg. (danh từ) hoặc
+   * 2 Sg. hiện tại TD/BN (động từ) – cùng hình thức, khác loại từ. */
+  function lastBaseIota(s) {
+    var i = s.length - 1, c, j, m;
+    while (i >= 0) {
+      c = s.charAt(i);
+      if (c >= '\u0300' && c <= '\u036f') { i--; continue; }
+      for (j = i + 1; j < s.length; j++) {
+        m = s.charAt(j);
+        if (m >= '\u0300' && m <= '\u036f') {
+          if (m === '\u0345') return { b: c, iota: true };
+        } else break;
+      }
+      return { b: c, iota: false };
+    }
+    return null;
+  }
+
+  function morphRun(token, entry) {
+    var M = window.SA_MORPH;
+    if (!M) return null;
+    if (!MORPH_NOUN) morphInit();
+    var k = key0(token);
+    var ex = M.exact[k] ||
+      M.exact[swapLastAccent(k, '\u0301', '\u0300')] ||
+      M.exact[swapLastAccent(k, '\u0300', '\u0301')];
+    if (ex) return { cat: ex[0], a: ex[1], e: null, conf: 2 };
+    var pos = entry ? entry.pos : '';
+    var posN = posIsNounLike(pos), posV = pos.indexOf('động từ') >= 0;
+    /* Từ loại tra được nhưng không thuộc bảng nào (tiểu từ, trạng từ, liên
+     * từ, giới từ...) → không đoán hình thái. */
+    if (entry && !posN && !posV) return null;
+    var bare = key2(token);
+    if (bare.length < 3) return null;
+    var bi = lastBaseIota(token.toLowerCase().normalize('NFD').replace(APOS_TAIL, ''));
+    if (bi && bi.iota && (bi.b === '\u03c9' || bi.b === '\u03b7' || bi.b === '\u03b1')) {
+      var opts = [];
+      if (bi.b === '\u03c9') {
+        opts.push('Dat. Sg. m./n. (ch 2)');
+      } else {
+        if (posN || !entry) opts.push('Dat. Sg. f. (ch 1)');
+        if (posV || !entry) opts.push('2 Sg. hiện tại, TD/BN (động từ)');
+      }
+      if (opts.length) {
+        return { cat: 'danh từ/động từ', a: opts.join(' / '), e: bi.b + '\u0345', conf: 1 };
+      }
+      return null;
+    }
+    /* Quy ước không rối não người học (chốt của người sở hữu): mỗi kết quả
+     * tối đa 2 khả năng, khả năng cao nhất đứng đầu. Từ không tra thấy:
+     * thử bảng danh từ trước (danh từ gặp nhiều hơn), không khớp mới thử
+     * bảng động từ – không gộp dàn trải hai bảng. */
+    var n = (posN || !entry) ? morphMatch(MORPH_NOUN, bare) : null;
+    if (n) return { cat: 'danh từ', a: cap2(n[1]), e: n[0], conf: 1 };
+    var v = (posV || !entry) ? morphMatch(MORPH_VERB, bare) : null;
+    if (v) return { cat: 'động từ', a: cap2(v[1]), e: v[0], conf: 1 };
+    return null;
+  }
+
+  /* Gợi ý hình thái cho một token; entry = kết quả tra từ điển (tuỳ chọn),
+   * dùng để chọn bảng đuôi phù hợp. Trả về {cat, a, e, conf} hoặc null. */
+  function morphLookup(token, entry) {
+    if (!window.SA_MORPH) return null;
+    var ck = token + '||' + (entry ? entry.lemma : '');
+    if (Object.prototype.hasOwnProperty.call(MORPH_CACHE, ck)) return MORPH_CACHE[ck];
+    var r = morphRun(token, entry);
+    MORPH_CACHE[ck] = r;
+    return r;
+  }
+
   /* Phân tích bản thị: trả về model cho hai exporter, hoặc mã lỗi thân thiện. */
   function analyze(raw, opts) {
     opts = opts || {};
@@ -245,6 +369,6 @@ var SA = (function () {
   return {
     LIMIT: LIMIT, FN: FN, COLORS: COLORS, STEPS: STEPS,
     analyze: analyze, splitSentences: splitSentences, tokenize: tokenize,
-    dictLookup: dictLookup
+    dictLookup: dictLookup, morphLookup: morphLookup
   };
 })();

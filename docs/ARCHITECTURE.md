@@ -18,12 +18,14 @@ Ba repo độc lập về deploy, cross-link nhau: portal giới thiệu tool �
 Người dùng paste văn bản Hy Lạp (≤ 1.500 ký tự)
         │
         ▼
-data/dict.js (nạp trước engine)
-        │      gán window.SA_DICT (TSV 812 mục nhúng chuỗi)
+data/dict.js + data/morph.js (nạp trước engine)
+        │      gán window.SA_DICT (TSV 812 mục) + window.SA_MORPH (bảng hình thái)
         ▼
 assets/engine.js        tách Satz (. · ; ! + xuống dòng) → token hóa khối từ
         │                (chỉ ký tự Hy Lạp + apostrophe elision ’ ʼ ')
         │                dictLookup(token): 3 tầng khoá, không thấy/mơ hồ → null
+        │                morphLookup(token, entry): dạng đóng (conf 2) hoặc
+        │                đoán theo đuôi (conf 1 – gắn "?" khi xuất)
         ▼
 model dữ liệu trung gian  { title, subtitle, sentences[{n, greek, tokens}],
         │                  vocab[unique theo thứ tự xuất hiện] }
@@ -35,7 +37,7 @@ Người học tự điền phần để trống (chức năng, dạng, nghĩa, 
 Tự xuất PDF: in HTML qua trình duyệt, hoặc biên dịch .tex (xem huong-dan.html)
 ```
 
-Bước "tự điền" là chủ đích, không phải thiếu sót: triết lý của tool là **không bịa phân tích** – mọi ô chưa xác định được để trống cho người học. Từ điển (Phần 2) và gợi ý hình thái (Phần 3) sẽ pre-fill dần các ô này bằng dữ liệu xác định được.
+Bước "tự điền" là chủ đích, không phải thiếu sót: triết lý của tool là **không bịa phân tích** – mọi ô chưa xác định được để trống cho người học. Từ điển (Phần 2) điền sẵn nghĩa khi tra thấy; gợi ý hình thái (Phần 3) điền dạng theo hai mức tin cậy: dạng đóng là chắc chắn, đoán theo đuôi luôn kèm "?" để kiểm chứng.
 
 ## 3. Nguyên tắc kỹ thuật bắt buộc
 
@@ -69,7 +71,7 @@ Preamble `.tex` lấy 1:1 từ định dạng canvas Satzanalyse (macro `\w \en 
 ## 5. Kế hoạch dữ liệu đóng gói
 
 - **Phần 2 – từ điển** (đã dựng): `data/dict.js` – chuỗi TSV nhúng trong biến JS (`window.SA_DICT`), parse bằng `split('\n')` + `split('\t')` khi lần tra đầu tiên (lazy). 812 mục, 6 cột (lemma/forms/pos/vi/en/keys); danh sách từ = 800 từ thông dụng nhất theo Kantharos Neu (Omega – Ulrich Gebhardt, CC BY-NC-SA 4.0), gloss tiếng Việt/English tự biên soạn (xem `docs/COPYRIGHT.md`). Lookup trong engine: 3 tầng khoá (chính xác → bỏ dấu hút → bỏ dấu thanh, từ ≥ 2 ký tự cơ bản) + 4 mức claim (lemma > keys > forms > weak) – chi tiết đặc tả `docs/FORMAT-SPEC.md` §5. Tra thấy → điền sẵn gloss/bảng từ vựng; không thấy hoặc mơ hồ → trả `null`, ô để trống (không bịa). Gợi ý đuôi thuộc Phần 3.
-- **Phần 3 – gợi ý hình thái**: bảng pattern đuôi (mạo từ, biến cách 1st/2nd/3rd, đuôi động từ các thời/thức) nhúng tương tự trong `data/`; pre-fill ô `form` của `.wb` và bảng đuôi PHẦN 2 bằng gợi ý có nhãn "gợi ý".
+- **Phần 3 – gợi ý hình thái** (đã dựng): `data/morph.js` (`window.SA_MORPH`): exact map dạng đóng (mạo từ, đại từ quan hệ, εἰμί, đại từ thường gặp; tra qua key0 + biến thể dấu grave/acute do hình thức biến thiên theo vị trí) + bảng đuôi danh từ (ch 1/2/3) và động từ (hiện tại/quá khứ/aorist/tương lai, chủ động + TD/BN, nguyên mẫu, ν di động). Engine `morphLookup(token, entry)`: từ loại tra được từ từ điển (entry) quyết định bảng đuôi (gate: tiểu từ/trạng từ/liên từ/giới từ → không đoán); không có từ điển → thử bảng noun trước, không khớp mới thử verb; tối đa 2 khả năng, cao nhất đứng đầu (quy ước chốt của người sở hữu); iota dưới cuối từ (ῃ/ᾳ/ῳ) = Dat. Sg. hoặc 2 Sg. TD/BN. conf 2 ghi thẳng, conf 1 gắn "?" – chi tiết đặc tả `docs/FORMAT-SPEC.md` §6. Pre-fill: ô form `.wb`, cột "Dạng (gợi ý)" bảng vocab, bảng đuôi tự động, comment `% Gợi ý hình thái` trong .tex.
 - **Phần 4 – corpus**: `data/corpus/*.js` – các bài phân tích mẫu hoàn chỉnh (làm tay, biên soạn theo pipeline graecum-vn) cho câu dựng từ readings L1–10 graecum-vn (nội dung public domain); `corpus.html` là gallery.
 
 ## 6. Ràng buộc bản quyền
