@@ -1,0 +1,67 @@
+/* Satzanalyse VN – style.css
+ * Style dùng chung cho các trang của site (đồng bộ palette canvas Satzanalyse + portal graecum-vn).
+ * Code: MIT License. Không dependency, không build. */
+
+:root{
+  --Prad:#1F5FBF;--Subj:#C0392B;--Akk:#1E8449;--Dat:#16877A;--Attr:#8E44AD;
+  --PN:#D9730D;--Adv:#8A6D1D;--Inf:#B03A6F;--Neg:#000;--Part:#7F8C8D;
+  --AcIS:#E0457B;--Konj:#5D6D7E;--App:#2E4A9E;--Vok:#4A235A;
+  --ink:#1a1a1a;--accent:#1F5FBF;--border:#9db8e0;--headbg:#e3ecf8;
+}
+*{box-sizing:border-box}
+body{font-family:'Palatino Linotype','Book Antiqua',Palatino,'Times New Roman',serif;
+     color:var(--ink);background:#eef1f5;margin:0}
+.page{max-width:960px;margin:0 auto;background:#fff;min-height:100vh;
+      box-shadow:0 0 14px rgba(0,0,0,.15);padding:0 40px 60px}
+header.site{border-bottom:3px solid var(--accent);margin:0 -40px 26px;padding:22px 40px 14px;
+      background:linear-gradient(180deg,#f4f8fe,#fff)}
+header.site h1{font-size:27px;margin:0 0 2px;color:var(--accent)}
+header.site h1 a{color:inherit;text-decoration:none}
+header.site .tagline{font-style:italic;color:#4a5568;margin:0 0 10px;font-size:15px}
+nav.site{font-family:system-ui,Arial,sans-serif;font-size:14px}
+nav.site a{color:var(--accent);text-decoration:none;margin-right:18px;font-weight:600}
+nav.site a:hover{text-decoration:underline}
+nav.site a[aria-current="page"]{color:#123;cursor:default;font-weight:700}
+h2.sec{font-family:system-ui,Arial,sans-serif;font-size:20px;border-bottom:2px solid var(--accent);
+      padding-bottom:3px;margin:30px 0 12px}
+h3.subsec{font-family:system-ui,Arial,sans-serif;font-size:16px;margin:20px 0 8px}
+.gk{font-family:'Palatino Linotype','Book Antiqua',Palatino,'Times New Roman',serif;font-size:1.06em}
+.box{border:1px solid var(--border);border-radius:7px;margin:14px 0;background:#fff;overflow:hidden}
+.box>.bt{background:var(--headbg);font:700 13px/1.3 system-ui,Arial,sans-serif;padding:7px 12px;
+      border-bottom:1px solid #c5d5ee}
+.box>.bb{padding:10px 14px;font-size:15.5px;line-height:1.55}
+.hint{background:#fff8dc;border:1px solid #e8d9a0;border-radius:6px;padding:8px 12px;
+      font-size:13.5px;margin:0 0 14px}
+.err{background:#fdecea;border:1px solid #f5b7b0;border-radius:6px;padding:10px 12px;
+      font-size:14px;margin:10px 0;display:none;color:#7b241c}
+.ok{background:#eafaf1;border:1px solid #a9dfbf;border-radius:6px;padding:10px 12px;
+      font-size:14px;margin:10px 0;display:none}
+label{font-family:system-ui,Arial,sans-serif;font-size:14px;font-weight:600;display:block;margin:12px 0 4px}
+input[type=text],textarea{width:100%;font-size:16px;padding:8px 10px;border:1px solid #b8c4d8;
+      border-radius:5px;font-family:inherit;background:#fff}
+textarea{min-height:150px;resize:vertical;line-height:1.7}
+textarea.over{border-color:#e74c3c;background:#fff5f4}
+.counter{font-family:system-ui,Arial,sans-serif;font-size:12.5px;color:#555;text-align:right;margin-top:3px}
+.counter.over{color:#c0392b;font-weight:700}
+button{font:700 14px system-ui,Arial,sans-serif;border-radius:6px;border:1px solid var(--accent);
+      background:var(--accent);color:#fff;padding:9px 18px;cursor:pointer;margin:14px 8px 0 0}
+button:hover{background:#194d96}
+button.ghost{background:#fff;color:var(--accent)}
+button.ghost:hover{background:#eef4fd}
+button:disabled{opacity:.45;cursor:not-allowed}
+.chips{margin:8px 0 4px;line-height:2.1}
+.chip{font:700 12px system-ui,Arial,sans-serif;margin-right:10px;white-space:nowrap}
+.actions{margin-top:6px}
+.summary{font-family:system-ui,Arial,sans-serif;font-size:13.5px;color:#333}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{font-family:system-ui,Arial,sans-serif;font-size:12px;background:#f0f3f8;text-align:left}
+th,td{border:1px solid #ccd4e0;padding:4px 7px;vertical-align:top}
+iframe#preview{width:100%;height:520px;border:1px solid var(--border);border-radius:6px;background:#fff}
+ul.flow{line-height:1.9}
+footer.site{margin:40px -40px 0;padding:16px 40px;border-top:1px solid var(--border);
+      background:#f4f7fc;font-size:12.5px;color:#444;line-height:1.7}
+footer.site a{color:var(--accent)}
+.note{font-size:13px;color:#444;margin-top:8px}
+code{background:#f0f3f8;border-radius:3px;padding:1px 5px;font-size:.92em}
+kbd{font-family:system-ui,Arial,sans-serif;border:1px solid #b8c4d8;border-bottom-width:2px;
+      border-radius:4px;padding:1px 6px;background:#f8fafd;font-size:.9em}

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hướng dẫn – Satzanalyse VN</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="page">
+
+<header class="site">
+  <h1><a href="index.html">Satzanalyse VN</a></h1>
+  <p class="tagline">Phân tích câu tiếng Hy Lạp cổ cho người Việt – dán câu, nhận khung phân tích HTML + LaTeX</p>
+  <nav class="site">
+    <a href="index.html">Công cụ</a>
+    <a href="huong-dan.html" aria-current="page">Hướng dẫn</a>
+    <a href="corpus.html">Corpus</a>
+    <a href="https://github.com/qtan-tran/graecum-vn" target="_blank">Graecum VN ↗</a>
+    <a href="https://github.com/qtan-tran/ancient-greek-toolkit" target="_blank">Toolkit ↗</a>
+  </nav>
+</header>
+
+<h2 class="sec">1. Luồng sử dụng</h2>
+<ul class="flow">
+  <li><b>Dán</b> văn bản Hy Lạp vào ô ở trang <a href="index.html">Công cụ</a> (giữ nguyên toàn bộ dấu). Nếu muốn, đặt tiêu đề cho tài liệu.</li>
+  <li><b>Tạo khung</b>: tool tách câu (theo <span class="gk">. · ; !</span> và xuống dòng), tách khối từ, và sinh hai file: bản HTML tự chứa và bản <code>.tex</code> (LaTeX).</li>
+  <li><b>Tự điền</b>: các ô để trống là chủ đích của phương pháp – tool không bịa phân tích. Bạn gán chức năng câu cho từng khối từ (theo màu ở phần Chú giải), điền dạng hình thái, bảng động từ, nghĩa, bảng "Dịch theo cụm" và bản dịch.</li>
+  <li><b>Xuất PDF</b> theo một trong hai cách ở mục 3 dưới đây.</li>
+</ul>
+
+<h2 class="sec">2. Cấu trúc khung phân tích</h2>
+<h3 class="subsec">PHẦN 1 – Phân tích trực quan: từng câu một</h3>
+<ul class="flow">
+  <li>Mỗi câu một khung: <b>sơ đồ khối từ</b> ba tầng (chức năng – từ – dạng hình thái, ô chức năng để trống <span class="gk">…</span> để bạn gán).</li>
+  <li><b>Bảng "Dịch theo cụm (cách nối nghĩa)"</b>: chia câu thành các cụm ~4–5 từ theo nhóm nghĩa để thấy cách các cụm nối với nhau trước khi dịch trọn câu. Bản chia mặc định ~4 từ – hãy tự chỉnh lại theo nhóm nghĩa; hai cột nghĩa để bạn điền.</li>
+  <li><b>Bảng động từ</b> 8 cột (dạng | từ điển | ngôi | số | thời | thức | thể | chủ ngữ): điền các dạng động từ được chia của câu; chủ ngữ không viết ra thì ghi "nằm trong đuôi động từ (ngôi … số …)".</li>
+  <li><b>7 bước</b>: đã điền sẵn lời nhắc của từng bước (tìm động từ → chủ ngữ → gộp khối từ → kén cách → AcI → phủ định → dịch). Làm việc từng bước ngay trong khung.</li>
+  <li><b>Bản dịch</b>: wörtlich (bản sát nghĩa) → natürlich (bản tự nhiên). Sau câu cuối là khung "Bản dịch toàn văn".</li>
+</ul>
+<h3 class="subsec">PHẦN 2 – Từ vựng và Pattern</h3>
+<ul class="flow">
+  <li><b>Bảng từ vựng</b>: liệt kê sẵn các từ theo thứ tự xuất hiện, không lặp; bạn điền từ điển, từ loại, nghĩa tiếng Việt/English; đánh dấu ★ cho từ lõi A1–A2.</li>
+  <li><b>Pattern box</b>: 3 ô trống (Ví dụ → Quy tắc → Mẹo nhận diện) để rút ra pattern vận dụng sang ví dụ khác.</li>
+  <li><b>Bảng đuôi</b>: ghi lại đuôi biến cách/chia gặp trong văn bản kèm cách nhận biết.</li>
+</ul>
+
+<h2 class="sec">3. Tự xuất PDF</h2>
+<p>Satzanalyse VN <b>không tự render PDF</b>. Hai cách sau đây cho kết quả đẹp nhất:</p>
+<h3 class="subsec">Cách A – In bản HTML qua trình duyệt (nhanh nhất)</h3>
+<ul class="flow">
+  <li>Mở file <code>satzanalyse.html</code> đã tải về bằng trình duyệt (Chrome/Edge/Firefox).</li>
+  <li>Bấm <kbd>Ctrl</kbd>+<kbd>P</kbd> (Windows/Linux) hoặc <kbd>Cmd</kbd>+<kbd>P</kbd> (macOS), chọn đích <b>Save as PDF</b>.</li>
+  <li>CSS in đã thiết lập sẵn: mỗi câu một trang, các khung không bị cắt ngang trang.</li>
+</ul>
+<h3 class="subsec">Cách B – Biên dịch bản .tex qua Overleaf (chất lượng cao nhất)</h3>
+<ul class="flow">
+  <li>Mở <a href="https://www.overleaf.com" target="_blank">overleaf.com</a> → <b>New Project → Blank Project</b>, đặt tên tuỳ ý.</li>
+  <li>Tải file <code>satzanalyse.tex</code> lên project (nút Upload) hoặc dùng nút "Chép nội dung .tex" ở trang Công cụ rồi dán vào file <code>main.tex</code>.</li>
+  <li>Menu <b>Settings → Compiler</b>: chọn <b>XeLaTeX</b> (bắt buộc – bản .tex dùng fontspec với font FreeSerif/DejaVu, đã có sẵn trong TeX Live của Overleaf).</li>
+  <li>Bấm <b>Recompile</b> 2 lần để bảng longtable ổn định → tải PDF về.</li>
+  <li>Biên dịch cục bộ: <code>xelatex satzanalyse.tex</code> chạy 2 lần (cần TeX Live/XeLaTeX + font FreeSerif, DejaVu).</li>
+</ul>
+<div class="hint">Trong bản .tex, dòng bản dịch dùng marker <b>wörtlich</b> (bản sát nghĩa) và <b>natürlich</b> (bản tự nhiên) theo đúng định dạng gốc của phương pháp Satzanalyse.</div>
+
+<h2 class="sec">4. Giới hạn & thông báo thân thiện</h2>
+<ul class="flow">
+  <li><b>1.500 ký tự</b> (≈ 15–20 câu) mỗi lần dán – ngưỡng hiển thị trực tiếp dưới ô văn bản; vượt ngưỡng tool báo lỗi và gợi ý chia nhỏ văn bản.</li>
+  <li>Tool chỉ nhận ký tự Hy Lạp: nếu dán toàn ký tự Latin sẽ được cảnh báo.</li>
+  <li>Từ điển tích hợp (đang xây): khi tra không thấy từ, tool <b>không bịa nghĩa</b> – trả về gợi ý đuôi và để trống ô nghĩa cho bạn tự điền.</li>
+</ul>
+
+<h2 class="sec">5. Lộ trình tính năng</h2>
+<ul class="flow">
+  <li><b>Phần 2</b> – từ điển Hy Lạp–Việt đóng gói (khởi nguồn từ vocabulary bài 1–10 của <a href="https://qtan-tran.github.io/graecum-vn/" target="_blank">Graecum VN</a>): pre-fill cột từ vựng + gloss ngắn trong khối từ.</li>
+  <li><b>Phần 3</b> – gợi ý hình thái: nhận diện đuôi biến cách/chia, gợi ý dạng ngay trong sơ đồ.</li>
+  <li><b>Phần 4</b> – corpus mẫu từ readings bài 1–10 Graecum VN, kèm phân tích đầy đủ làm gương.</li>
+  <li>Chi tiết: <code>docs/ROADMAP.md</code> trong repo GitHub.</li>
+</ul>
+
+<footer class="site">
+  Satzanalyse VN · Biên soạn bởi Trần Quốc Tân · Nội dung CC BY-SA 4.0 · Code MIT<br>
+  Khi cite hoặc tái sử dụng, ghi công: "Satzanalyse VN – Trần Quốc Tân, https://github.com/qtan-tran/satzanalyse-vn"
+</footer>
+
+</div>
+</body>
+</html>

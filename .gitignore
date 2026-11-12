@@ -1,0 +1,19 @@
+# Hệ điều hành
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Trình soạn thảo
+*.swp
+*~
+.vscode/
+.idea/
+
+# Tạm / build (dự án no-build, không có bước build)
+node_modules/
+*.tmp
+*.log
+
+# Kết quả người dùng tự sinh khi dùng tool (không commit)
+satzanalyse.html
+satzanalyse.tex

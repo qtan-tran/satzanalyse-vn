@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Satzanalyse VN – Phân tích câu tiếng Hy Lạp cổ</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="page">
+
+<header class="site">
+  <h1><a href="index.html">Satzanalyse VN</a></h1>
+  <p class="tagline">Phân tích câu tiếng Hy Lạp cổ cho người Việt – dán câu, nhận khung phân tích HTML + LaTeX</p>
+  <nav class="site">
+    <a href="index.html" aria-current="page">Công cụ</a>
+    <a href="huong-dan.html">Hướng dẫn</a>
+    <a href="corpus.html">Corpus</a>
+    <a href="https://github.com/qtan-tran/graecum-vn" target="_blank">Graecum VN ↗</a>
+    <a href="https://github.com/qtan-tran/ancient-greek-toolkit" target="_blank">Toolkit ↗</a>
+  </nav>
+</header>
+
+<h2 class="sec">Nhập văn bản</h2>
+
+<div class="hint">Dán văn bản Hy Lạp (giữ nguyên dấu, tối đa <b>1.500 ký tự</b> ≈ 15–20 câu mỗi lần).
+Tool tách câu, tách khối từ và sinh <b>khung phân tích để bạn tự điền</b> – tool không bịa phân tích.
+Xuất PDF thế nào? Xem trang <a href="huong-dan.html">Hướng dẫn</a>.</div>
+
+<div class="err" id="err"></div>
+<div class="ok" id="ok"></div>
+
+<label for="f-title">Tiêu đề (tuỳ chọn)</label>
+<input type="text" id="f-title" placeholder="Ví dụ: Thư Antigonos gửi Zeno">
+
+<label for="f-text">Văn bản gốc <span class="gk">(ἀρχαῖα ἑλληνικά)</span></label>
+<textarea id="f-text" spellcheck="false" placeholder="Dán văn bản Hy Lạp vào đây…"></textarea>
+<div class="counter" id="counter">0 / 1500 ký tự</div>
+
+<div class="actions">
+  <button id="btn-run">Tạo khung phân tích</button>
+</div>
+
+<h2 class="sec">Kết quả</h2>
+
+<div class="summary" id="summary" style="display:none"></div>
+<div class="actions" id="dl-actions" style="display:none">
+  <button id="btn-dl-html">Tải satzanalyse.html</button>
+  <button id="btn-dl-tex" class="ghost">Tải satzanalyse.tex</button>
+  <button id="btn-copy-tex" class="ghost">Chép nội dung .tex</button>
+</div>
+<p class="note" id="preview-note" style="display:none">Xem trước bản HTML bên dưới; mở rộng/full screen bằng nút trong khung xem trước của trình duyệt.</p>
+<iframe id="preview" title="Xem trước khung phân tích" style="display:none"></iframe>
+
+<h2 class="sec">Chú giải nhanh</h2>
+<div class="box">
+  <div class="bt">14 chức năng câu (màu chuẩn dùng trong mọi khung)</div>
+  <div class="bb">
+    <div class="chips" id="chips"></div>
+    Mỗi khối từ trong sơ đồ có ba tầng: <b>chức năng câu</b> (trên) – <b>từ</b> (giữa) – <b>dạng hình thái</b> (dưới).
+    Ô chức năng để trống (<span class="gk">…</span>) là nơi bạn tự gán sau khi phân tích.
+  </div>
+</div>
+
+<footer class="site">
+  Satzanalyse VN · Biên soạn bởi Trần Quốc Tân · Nội dung CC BY-SA 4.0 · Code MIT<br>
+  Khi cite hoặc tái sử dụng, ghi công: "Satzanalyse VN – Trần Quốc Tân, https://github.com/qtan-tran/satzanalyse-vn"
+</footer>
+
+</div>
+
+<script src="assets/engine.js"></script>
+<script src="assets/exporter-html.js"></script>
+<script src="assets/exporter-tex.js"></script>
+<script>
+(function () {
+  'use strict';
+  var elText = document.getElementById('f-text');
+  var elTitle = document.getElementById('f-title');
+  var elCounter = document.getElementById('counter');
+  var elErr = document.getElementById('err');
+  var elOk = document.getElementById('ok');
+  var elSummary = document.getElementById('summary');
+  var elActions = document.getElementById('dl-actions');
+  var elPreviewNote = document.getElementById('preview-note');
+  var elPreview = document.getElementById('preview');
+  var elChips = document.getElementById('chips');
+  var lastHTML = '', lastTEX = '', lastName = 'satzanalyse';
+
+  /* Dải màu chức năng ở trang tool */
+  elChips.innerHTML = SA.FN.map(function (f) {
+    return '<span class="chip" style="color:' + SA.COLORS[f.k] + '">' + f.vi +
+      ' (' + f.en + ')</span>';
+  }).join('');
+
+  /* Rút gọn tên file từ tiêu đề (bỏ dấu, thay ký tự lạ bằng gạch nối). */
+  function slug(s) {
+    s = s.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return s || 'satzanalyse';
+  }
+
+  function countChars() {
+    var n = Array.from(elText.value.trim()).length;
+    var over = n > SA.LIMIT;
+    elCounter.textContent = n + ' / ' + SA.LIMIT + ' ký tự';
+    elCounter.className = 'counter' + (over ? ' over' : '');
+    elText.className = over ? 'over' : '';
+  }
+  elText.addEventListener('input', countChars);
+  countChars();
+
+  function fail(msg) {
+    elErr.textContent = msg;
+    elErr.style.display = 'block';
+    elOk.style.display = 'none';
+    elSummary.style.display = 'none';
+    elActions.style.display = 'none';
+    elPreviewNote.style.display = 'none';
+    elPreview.style.display = 'none';
+  }
+
+  function succeed(msg) {
+    elOk.textContent = msg;
+    elOk.style.display = 'block';
+    elErr.style.display = 'none';
+  }
+
+  function download(name, content, mime) {
+    var blob = new Blob([content], { type: mime + ';charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+  }
+
+  document.getElementById('btn-run').addEventListener('click', function () {
+    var model = SA.analyze(elText.value, { title: elTitle.value });
+    if (!model.ok) {
+      if (model.code === 'empty') {
+        fail('Bạn chưa dán văn bản. Hãy dán câu tiếng Hy Lạp vào ô "Văn bản gốc" rồi bấm "Tạo khung phân tích".');
+      } else if (model.code === 'limit') {
+        fail('Văn bản của bạn có ' + model.chars + ' ký tự, vượt ngưỡng ' + SA.LIMIT +
+             ' ký tự của một lần phân tích (để khung xuất không quá dài). Hãy chia nhỏ văn bản – mỗi lần khoảng 15–20 câu – rồi phân tích từng phần.');
+      } else if (model.code === 'nogreek') {
+        fail('Không tìm thấy ký tự Hy Lạp nào trong văn bản. Hãy kiểm tra lại: bản dán cần là văn bản tiếng Hy Lạp (kèm dấu).');
+      }
+      return;
+    }
+    lastHTML = SA_HTML.build(model);
+    lastTEX = SA_TEX.build(model);
+    lastName = model.title ? 'satzanalyse-' + slug(model.title) : 'satzanalyse';
+
+    var nTok = 0;
+    model.sentences.forEach(function (s) { nTok += s.tokens.length; });
+    succeed('Đã nhận: ' + model.sentences.length + ' câu · ' + nTok + ' khối từ · ' +
+            model.vocab.length + ' từ vựng (không lặp). Hai file đã sẵn sàng tải về.');
+
+    elSummary.textContent = 'File xuất: ' + lastName + '.html (khung phân tích, tự điền + in ra PDF qua trình duyệt) · ' +
+                            lastName + '.tex (biên dịch qua XeLaTeX/Overleaf).';
+    elSummary.style.display = 'block';
+    elActions.style.display = 'block';
+    elPreviewNote.style.display = 'block';
+    elPreview.style.display = 'block';
+    elPreview.src = URL.createObjectURL(new Blob([lastHTML], { type: 'text/html;charset=utf-8' }));
+  });
+
+  document.getElementById('btn-dl-html').addEventListener('click', function () {
+    download(lastName + '.html', lastHTML, 'text/html');
+  });
+  document.getElementById('btn-dl-tex').addEventListener('click', function () {
+    download(lastName + '.tex', lastTEX, 'application/x-tex');
+  });
+  document.getElementById('btn-copy-tex').addEventListener('click', function () {
+    var btn = this;
+    function done() {
+      var old = btn.textContent;
+      btn.textContent = 'Đã chép ✓';
+      setTimeout(function () { btn.textContent = old; }, 1600);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(lastTEX).then(done);
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = lastTEX;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+  });
+})();
+</script>
+</body>
+</html>
