@@ -23,7 +23,7 @@
 
 | Phần | Nội dung | Trạng thái |
 | --- | --- | --- |
-| 1 | Khung repo + docs nền (ARCHITECTURE/ROADMAP/COPYRIGHT/FORMAT-SPEC/STYLE) + trang `index` (tool MVP: paste → khung HTML + .tex, ngưỡng 1.500) + `huong-dan` (tự xuất PDF) + `corpus` (placeholder) | ✅ Draft xong, chờ duyệt + tạo repo |
+| 1 | Khung repo + docs nền (ARCHITECTURE/ROADMAP/COPYRIGHT/FORMAT-SPEC/STYLE) + trang `index` (tool MVP: paste → khung HTML + .tex, ngưỡng 1.500) + `huong-dan` (tự xuất PDF) + `corpus` (placeholder) | ✅ Push xong (commit `efe392c`, 16 file, verify PASS); chờ bật Pages |
 | 2 | Từ điển client-side `data/dict.js` (TSV nhúng chuỗi; nguồn `vocab/vocab-01-10.tsv` graecum-vn + gloss; lookup, để trống khi không thấy) | ☐ |
 | 3 | Engine gợi ý hình thái: pattern đuôi biến cách/chia; pre-fill ô dạng + bảng đuôi tự động | ☐ |
 | 4 | Corpus mẫu L1–10: câu dựng từ readings graecum-vn (PD), phân tích đầy đủ làm mẫu; `corpus.html` gallery + data JS | ☐ |
@@ -31,11 +31,12 @@
 
 ## Bước tiếp theo
 
-1. Người sở hữu duyệt bản nháp Phần 1 + tạo repo `qtan-tran/satzanalyse-vn` (public) → push skeleton theo bản đồ tên phẳng trong Knowledge topic.
+1. Người sở hữu bật GitHub Pages (Settings → Pages → Deploy from branch `main` / `/root`) → site sống tại https://qtan-tran.github.io/satzanalyse-vn/ (lưu ý: quota Actions tháng có thể hết → build startup_failure vô hại, deploy lại sau).
 2. Phần 2: lấy `vocab/vocab-01-10.tsv` từ repo graecum-vn (curl raw kèm sha) → dựng `data/dict.js` + tích hợp lookup vào engine (hiện nghĩa ở ô từ vựng + gloss ngắn ở Wortblock; không thấy → để trống + gợi ý đuôi).
 3. Phần 3: bảng pattern đuôi (mạo từ, chia thứ nhất/thứ hai/thứ ba, đuôi động từ hiện tại/aorist đã học trong L1–L10) → pre-fill có nhãn "gợi ý".
 
 ## Lịch sử
 
+- **Phần 1 push xong (commit `efe392c`)**: người sở hữu duyệt vòng 2 → push 16 file skeleton vào repo `qtan-tran/satzanalyse-vn` (nhánh `main`, tách tiền tố `root__`/`assets__`/`docs__` thành thư mục). Verify PASS: cây repo đủ 16 file (7 root + 4 assets + 5 docs), index.html qua raw kèm sha (doctype + `</html>` + không còn ô trọng tâm), exporter-tex.js còn block `\\renewcommand` + chú giải grp; sweep 0 em dash/FFFD. Chờ bật Pages.
 - **Duyệt lần 1 – chỉnh theo người sở hữu (chưa push)**: (a) bỏ ô "Trọng tâm ngữ pháp (tuỳ chọn)" khỏi UI tool – người dùng mặc định là người mới học Ancient Greek, mọi điểm ngữ pháp đều quan trọng; UI chỉ hỏi tiêu đề (tuỳ chọn); trường `subtitle` trong model giữ lại cho corpus Phần 4 (FORMAT-SPEC §0); đồng bộ index.html, huong-dan.html, FORMAT-SPEC. (b) Output HTML/.tex bám sát đúng scope khung "Chú giải" của skill bản cập nhật: bổ sung giải thích nhóm (grp – khung bao AcI/mệnh đề phụ kèm nhãn chức năng) vào Chú giải của cả hai định dạng.
 - **Phần 1 draft (lần 1)**: dựng toàn bộ khung repo + docs nền + tool MVP trong Knowledge topic (bản nháp, chưa push). Chốt cấu hình sau hỏi đáp người sở hữu: ngưỡng 1.500 ký tự; đa trang index + huong-dan + corpus, style đồng bộ portal; từ điển TSV nhúng chuỗi trong `.js` (không fetch vì CORS file://); Phần 1 = khung + docs + tool MVP. Quyết định thiết kế: nhãn chức năng tiếng Việt + gloss Anh (key macro giữ nguyên); .tex preamble canvas 1:1 + block `\renewcommand` nhãn tiếng Việt; cột vocab thay Deutsch bằng Tiếng Việt; khung MVP để trống có chủ đích (fn "…", form "(dạng?)", steps prefilled 7 prompt gợi nhớ phương pháp); tách câu theo `. · ; !` + xuống dòng; token = ký tự Hy Lạp + apostrophe elision.
