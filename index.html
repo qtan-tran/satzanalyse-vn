@@ -25,7 +25,7 @@
 <h2 class="sec">Nhập văn bản</h2>
 
 <div class="hint">Dán câu tiếng Hy Lạp (giữ nguyên dấu, tối đa <b>1.500 ký tự</b> ≈ 15–20 câu mỗi lần). Tool sinh <b>khung phân tích để bạn tự điền</b> – ô trống là phần cần bạn phân tích, tool không bịa.
-Sau khi tạo khung, dùng <b>Worksheet</b> ngay dưới bản xem trước để gán chức năng từng khối từ. Xuất PDF thế nào? Xem trang <a href="huong-dan.html">Hướng dẫn</a>. Chưa có câu để thử? Bấm <b>Thử câu mẫu</b>.</div>
+Muốn có khung phân tích hoàn chỉnh (chức năng + màu + dịch từng cụm + hình thái chính xác)? Yêu cầu phân tích trực tiếp trong cuộc trò chuyện để nhận bản fill sẵn. Xuất PDF thế nào? Xem trang <a href="huong-dan.html">Hướng dẫn</a>. Chưa có câu để thử? Bấm <b>Thử câu mẫu</b>.</div>
 
 <div class="err" id="err"></div>
 <div class="ok" id="ok"></div>
@@ -51,28 +51,13 @@ Sau khi tạo khung, dùng <b>Worksheet</b> ngay dưới bản xem trước đ�
 <p class="note" id="preview-note" style="display:none">Xem trước bản HTML bên dưới; bấm <b>Mở khung trong tab mới</b> để đọc ở cửa sổ riêng.</p>
 <iframe id="preview" title="Xem trước khung phân tích" style="display:none"></iframe>
 
-<div class="box" id="ws-box" style="display:none">
-  <div class="bt">Worksheet (Phần 7) – gán chức năng câu ngay trong bản xem trước</div>
-  <div class="bb">
-    <p style="margin:0 0 8px">Bấm vào một <b>khối từ</b> trong bản xem trước để chọn, rồi bấm một chức năng bên dưới (hoặc phím số) để gán: nhãn tiếng Việt và màu chuẩn hiện ngay trên khối từ.
-    <b>Shift + bấm</b> vào khối (hoặc phím Backspace) xoá gán của khối đang chọn; phím <b>Esc</b> bỏ chọn.
-    Gán được mang theo vào file <b>satzanalyse.html</b> khi tải về; bản .tex vẫn là khung để trống (lộ trình).</p>
-    <div class="wchips" id="ws-chips"></div>
-    <p class="note" id="ws-status" style="margin:6px 0 8px">Chưa chọn khối từ nào.</p>
-    <div class="actions">
-      <button id="ws-clear" class="ghost">Xoá gán khối đang chọn</button>
-      <button id="ws-clear-all" class="ghost">Xoá tất cả gán</button>
-    </div>
-  </div>
-</div>
-
 <h2 class="sec">Chú giải nhanh</h2>
 <div class="box">
   <div class="bt">14 chức năng câu (màu chuẩn dùng trong mọi khung)</div>
   <div class="bb">
     <div class="chips" id="chips"></div>
     Mỗi khối từ trong sơ đồ có ba tầng: <b>chức năng câu</b> (trên) – <b>từ</b> (giữa) – <b>dạng hình thái</b> (dưới).
-    Ô chức năng để trống (<span class="gk">…</span>) là nơi bạn tự gán – dùng <b>Worksheet</b> dưới bản xem trước, gán được ghi thẳng vào file HTML khi tải về.
+    Ô chức năng để trống (<span class="gk">…</span>) là nơi bạn tự gán sau khi phân tích.
     Đọc khối từ: nghĩa tiếng Việt hiện dưới từ khi tra thấy từ điển (nhãn "(bóc đuôi)" = đoán ngược về từ điển – kiểm chứng); ô dạng: "?" = đoán theo đuôi (kiểm chứng), "bất biến" = không biến cách (chắc chắn), "(dạng?)" = chưa đoán được.
     Chi tiết: trang <a href="huong-dan.html">Hướng dẫn</a>.
   </div>
@@ -102,128 +87,7 @@ Sau khi tạo khung, dùng <b>Worksheet</b> ngay dưới bản xem trước đ�
   var elPreviewNote = document.getElementById('preview-note');
   var elPreview = document.getElementById('preview');
   var elChips = document.getElementById('chips');
-  var elWsBox = document.getElementById('ws-box');
-  var elWsChips = document.getElementById('ws-chips');
-  var elWsStatus = document.getElementById('ws-status');
   var lastHTML = '', lastTEX = '', lastName = 'satzanalyse', previewURL = null, tabURL = null;
-
-  /* ============ Worksheet Phần 7: gán chức năng trong bản xem trước ============
-   * Trạng thái gán nằm ở trang tool; bản xem trước là HTML sinh từ exporter
-   * (data-s/data-key trên mỗi .wb) + script tương tác nhỏ chỉ chèn vào
-   * PREVIEW (blob iframe, same-origin → postMessage 2 chiều).
-   * File tải về vẫn là HTML tĩnh không <script> (FORMAT-SPEC §2/§10):
-   * gán được ghi vào fill { sentences[].fn } của SA_HTML.build(model, fill). */
-  var ws = { model: null, assign: [], sel: null, total: 0, ready: false };
-
-  var WS_JS = [
-    '(function () {',
-    '  "use strict";',
-    '  var sel = null;',
-    '  function find(s, k) {',
-    '    var els = document.querySelectorAll(".wb[data-s][data-key]");',
-    '    for (var i = 0; i < els.length; i++) {',
-    '      if (els[i].getAttribute("data-s") === s && els[i].getAttribute("data-key") === k) return els[i];',
-    '    }',
-    '    return null;',
-    '  }',
-    '  function pick(el) { if (sel) sel.style.outline = ""; sel = el; el.style.outline = "2px solid #f0a500"; }',
-    '  document.addEventListener("click", function (e) {',
-    '    var t = e.target;',
-    '    while (t && t !== document.body && !(t.classList && t.classList.contains("wb"))) t = t.parentNode;',
-    '    if (!t || !t.classList || !t.classList.contains("wb") || t.getAttribute("data-key") === null) return;',
-    '    var s = t.getAttribute("data-s"), k = t.getAttribute("data-key");',
-    '    if (e.shiftKey) { parent.postMessage({ saWs: 1, type: "clear", s: s, key: k }, "*"); return; }',
-    '    pick(t);',
-    '    parent.postMessage({ saWs: 1, type: "select", s: s, key: k }, "*");',
-    '  }, false);',
-    '  window.addEventListener("message", function (e) {',
-    '    var d = e.data;',
-    '    if (!d || d.saWs !== 2) return;',
-    '    if (d.type === "deselect") { if (sel) { sel.style.outline = ""; sel = null; } return; }',
-    '    var el = find(String(d.s), d.key);',
-    '    if (!el) return;',
-    '    if (d.type === "assign") { el.style.setProperty("--c", d.color); el.querySelector(".fn").textContent = d.vi; }',
-    '    else if (d.type === "reset") { el.style.setProperty("--c", "#777"); el.querySelector(".fn").textContent = "…"; }',
-    '    else if (d.type === "mark") { pick(el); }',
-    '  }, false);',
-    '  parent.postMessage({ saWs: 1, type: "ready" }, "*");',
-    '})();'
-  ].join('\n');
-
-  function wsInject(html) {
-    return html.replace('</body>', '<script>' + WS_JS + '</scr' + 'ipt></body>');
-  }
-
-  function wsFill() {
-    return { sentences: ws.assign.map(function (a) { return { fn: a }; }) };
-  }
-
-  function wsCount() {
-    var n = 0;
-    ws.assign.forEach(function (a) { n += Object.keys(a).length; });
-    return n;
-  }
-
-  function wsPost(d) {
-    d.saWs = 2;
-    if (ws.ready) { try { elPreview.contentWindow.postMessage(d, '*'); } catch (err) {} }
-  }
-
-  function wsStatus(msg) {
-    if (msg) { elWsStatus.textContent = msg; return; }
-    if (!ws.sel) { elWsStatus.textContent = 'Chưa chọn khối từ nào. Đã gán ' + wsCount() + ' / ' + ws.total + ' khối từ.'; return; }
-    var cur = ws.assign[ws.sel.s][ws.sel.key];
-    var curVi = cur ? fnVi(cur) : '(chưa gán)';
-    elWsStatus.innerHTML = 'Đang chọn: <b>' + escHtml(ws.sel.key) + '</b> (câu ' + (Number(ws.sel.s) + 1) +
-      ') – hiện gán: <b>' + curVi + '</b>. Đã gán ' + wsCount() + ' / ' + ws.total + ' khối từ.';
-  }
-
-  function escHtml(s) {
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
-  function fnVi(k) {
-    for (var i = 0; i < SA.FN.length; i++) if (SA.FN[i].k === k) return SA.FN[i].vi;
-    return '?';
-  }
-
-  function wsRebuild() {
-    /* lastHTML = bản tải về: mang gán qua fill, KHÔNG chứa script tương tác. */
-    lastHTML = SA_HTML.build(ws.model, wsFill());
-  }
-
-  function wsSelect(s, key) {
-    ws.sel = { s: Number(s), key: key };
-    wsStatus();
-  }
-
-  function wsAssign(k) {
-    if (!ws.sel) { wsStatus('Hãy bấm chọn một khối từ trong bản xem trước trước đã.'); return; }
-    ws.assign[ws.sel.s][ws.sel.key] = k;
-    wsPost({ type: 'assign', s: ws.sel.s, key: ws.sel.key, color: SA.COLORS[k], vi: fnVi(k) });
-    wsRebuild();
-    wsStatus();
-  }
-
-  function wsClear(s, key) {
-    if (ws.assign[s] && ws.assign[s][key] !== undefined) { delete ws.assign[s][key]; }
-    wsPost({ type: 'reset', s: s, key: key });
-    wsRebuild();
-    wsStatus();
-  }
-
-  function wsClearAll() {
-    ws.assign = ws.model ? ws.model.sentences.map(function () { return {}; }) : [];
-    ws.sel = null;
-    wsRebuild();
-    /* nạp lại preview (mất chọn – chủ đích của "xoá tất cả") */
-    if (previewURL) { URL.revokeObjectURL(previewURL); }
-    previewURL = URL.createObjectURL(new Blob([wsInject(lastHTML)], { type: 'text/html;charset=utf-8' }));
-    ws.ready = false;
-    elPreview.onload = function () { ws.ready = true; };
-    elPreview.src = previewURL;
-    wsStatus();
-  }
 
   /* Câu mẫu John 1:1 (trùng corpus L6) để thử ngay lần đầu. */
   var SAMPLE_TEXT = 'ἐν ἀρχῇ ἦν ὁ λόγος, καὶ ὁ λόγος ἦν πρὸς τὸν θεόν, καὶ θεὸς ἦν ὁ λόγος.';
@@ -239,52 +103,6 @@ Sau khi tạo khung, dùng <b>Worksheet</b> ngay dưới bản xem trước đ�
     return '<span class="chip" style="color:' + SA.COLORS[f.k] + '">' + f.vi +
       ' (' + f.en + ')</span>';
   }).join('');
-
-  /* Worksheet: 14 nút chức năng; 10 nút đầu có phím số (1–9, 0) */
-  elWsChips.innerHTML = SA.FN.map(function (f, i) {
-    var num = i < 9 ? String(i + 1) : (i === 9 ? '0' : '');
-    return '<button type="button" class="wchip" data-k="' + f.k + '" style="color:' +
-      SA.COLORS[f.k] + '">' + (num ? '<span class="wnum">' + num + '</span>' : '') +
-      f.vi + '</button>';
-  }).join('');
-  elWsChips.addEventListener('click', function (e) {
-    var t = e.target;
-    while (t && t !== elWsChips && !(t.classList && t.classList.contains('wchip'))) t = t.parentNode;
-    if (t && t.classList && t.classList.contains('wchip')) wsAssign(t.getAttribute('data-k'));
-  });
-
-  /* Nhận sự kiện từ script tương tác trong preview (iframe blob same-origin) */
-  window.addEventListener('message', function (e) {
-    var d = e.data;
-    if (!d || d.saWs !== 1) return;
-    if (d.type === 'ready') { ws.ready = true; return; }
-    if (d.type === 'select') { wsSelect(d.s, d.key); }
-    else if (d.type === 'clear') { wsClear(Number(d.s), d.key); }
-  });
-
-  /* Phím tắt worksheet: 1–9/0 gán, Backspace/Delete xoá gán, Esc bỏ chọn */
-  document.addEventListener('keydown', function (e) {
-    if (!ws.model || elWsBox.style.display === 'none') return;
-    var tag = e.target && e.target.tagName;
-    if (tag === 'TEXTAREA' || tag === 'INPUT') return;
-    if (e.key === 'Escape') {
-      ws.sel = null;
-      wsPost({ type: 'deselect' });
-      wsStatus();
-      return;
-    }
-    if (e.key === 'Backspace' || e.key === 'Delete') {
-      if (ws.sel) { e.preventDefault(); wsClear(ws.sel.s, ws.sel.key); }
-      return;
-    }
-    var map = { '1': 0, '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6, '8': 7, '9': 8, '0': 9 };
-    if (map[e.key] !== undefined) { e.preventDefault(); wsAssign(SA.FN[map[e.key]].k); }
-  });
-
-  document.getElementById('ws-clear').addEventListener('click', function () {
-    if (ws.sel) wsClear(ws.sel.s, ws.sel.key);
-  });
-  document.getElementById('ws-clear-all').addEventListener('click', wsClearAll);
 
   function countChars() {
     var n = Array.from(elText.value.trim()).length;
@@ -310,9 +128,6 @@ Sau khi tạo khung, dùng <b>Worksheet</b> ngay dưới bản xem trước đ�
     elActions.style.display = 'none';
     elPreviewNote.style.display = 'none';
     elPreview.style.display = 'none';
-    elWsBox.style.display = 'none';
-    ws.model = null;
-    ws.sel = null;
   }
 
   function succeed(msg) {
@@ -345,16 +160,9 @@ Sau khi tạo khung, dùng <b>Worksheet</b> ngay dưới bản xem trước đ�
       }
       return;
     }
+    lastHTML = SA_HTML.build(model);
     lastTEX = SA_TEX.build(model);
     lastName = 'satzanalyse'; /* không còn ô Tiêu đề (Phần 6): tên file mặc định */
-
-    /* Worksheet (Phần 7): reset gán; lastHTML mang fill (gán rỗng lúc đầu) */
-    ws.model = model;
-    ws.assign = model.sentences.map(function () { return {}; });
-    ws.sel = null;
-    ws.total = 0;
-    model.sentences.forEach(function (s) { ws.total += s.tokens.length; });
-    wsRebuild();
 
     var nTok = 0;
     model.sentences.forEach(function (s) { nTok += s.tokens.length; });
@@ -370,13 +178,8 @@ Sau khi tạo khung, dùng <b>Worksheet</b> ngay dưới bản xem trước đ�
     elActions.style.display = 'block';
     elPreviewNote.style.display = 'block';
     elPreview.style.display = 'block';
-    elWsBox.style.display = 'block';
-    wsStatus('Chưa chọn khối từ nào. Bấm vào một khối từ trong bản xem trước để bắt đầu gán chức năng.');
     if (previewURL) { URL.revokeObjectURL(previewURL); }
-    /* preview = HTML mang gán + script tương tác (chỉ sống trong preview) */
-    previewURL = URL.createObjectURL(new Blob([wsInject(lastHTML)], { type: 'text/html;charset=utf-8' }));
-    ws.ready = false;
-    elPreview.onload = function () { ws.ready = true; };
+    previewURL = URL.createObjectURL(new Blob([lastHTML], { type: 'text/html;charset=utf-8' }));
     elPreview.src = previewURL;
   });
 

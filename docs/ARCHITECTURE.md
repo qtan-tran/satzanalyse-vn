@@ -40,7 +40,7 @@ Tự xuất PDF: in HTML qua trình duyệt, hoặc biên dịch .tex (xem huong
 
 Bước "tự điền" là chủ đích, không phải thiếu sót: triết lý của tool là **không bịa phân tích** – mọi ô chưa xác định được để trống cho người học. Từ điển (Phần 2) điền sẵn nghĩa khi tra thấy; gợi ý hình thái (Phần 3) điền dạng theo hai mức tin cậy: dạng đóng là chắc chắn, đoán theo đuôi luôn kèm "?" để kiểm chứng. Corpus mẫu (Phần 4) là nhánh riêng: `corpus.html` nạp thêm `data/corpus.js` (bài phân tích làm tay, đã duyệt) và gọi exporter với tham số fill `{hint, vi, sentences[], patterns[]}` – khung dựng ra đã điền sẵn (kể cả 3 ô Pattern làm gương phương pháp), làm mẫu cho người học.
 
-**Worksheet tương tác (Phần 7)** là cầu nối giữa "khung để trống" và "tự điền", vẫn không bịa: exporter phát thuộc tính tĩnh `data-s`/`data-key` (khóa token#n, FORMAT-SPEC §9) trên mỗi khối từ `.wb`; trang tool chèn script tương tác **chỉ vào bản xem trước** (iframe blob same-origin, `postMessage` 2 chiều với cờ `saWs`) cho người học chọn khối từ và gán 14 chức năng; trạng thái gán giữ ở trang tool, mỗi lần gán/xoá trang tool build lại file tải về qua cùng fill API `{ sentences[]: { fn } }` của Phần 4 → file HTML mang theo gán nhưng vẫn tĩnh, không `<script>` (FORMAT-SPEC §10). Bản `.tex` không nhận fill (giữ quyết định Phần 4).
+**Worksheet tương tác (Phần 7)** từng làm (commit `4a0d41f`) rồi **rút lại** cùng ngày theo yêu cầu người sở hữu: hướng đi chốt là khung phân tích hoàn chỉnh (chức năng + màu + dịch từng cụm + hình thái chính xác) do người phân tích fill qua đúng fill API Phần 4 nêu trên, thay vì người học tự gán từng khối. Bản `.tex` không nhận fill (giữ quyết định Phần 4).
 
 ## 3. Nguyên tắc kỹ thuật bắt buộc
 

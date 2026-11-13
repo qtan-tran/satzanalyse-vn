@@ -5,9 +5,6 @@
  * Corpus mẫu (Phần 4, FORMAT-SPEC §9): build(model, fill) nhận fill tuỳ chọn
  * {hint, vi, sentences[], patterns[]} điền sẵn chức năng/dạng/gloss/bảng/
  * bản dịch/ô Pattern cho câu mẫu; không có fill thì sinh khung để trống như cũ.
- * Phần 7 (FORMAT-SPEC §10): mỗi .wb mang thuộc tính tĩnh data-s (số câu) và
- * data-key (khóa token#n) để worksheet trong trang tool tham chiếu khi gán
- * chức năng; bản xuất vẫn tĩnh, không <script>.
  * Code: MIT License. ES5, không dependency. */
 var SA_HTML = (function () {
   'use strict';
@@ -124,7 +121,7 @@ var SA_HTML = (function () {
     return null;
   }
 
-  function wbBlock(token, sf, counts, si) {
+  function wbBlock(token, sf, counts) {
     counts[token] = (counts[token] || 0) + 1;
     var key = counts[token] === 1 ? token : token + '#' + counts[token];
     var e = SA.dictLookup(token);
@@ -135,19 +132,17 @@ var SA_HTML = (function () {
       (e ? shortGloss(e.vi) : '');
     var formTx = sf && sf.form && sf.form[key] !== undefined ?
       esc(sf.form[key]) : formText(m);
-    /* data-s/data-key (Phần 7): thuộc tính tĩnh cho worksheet trong trang
-     * tool định vị khối từ theo (số câu, khóa token#n); bản xuất không script. */
-    return '<span class="wb" data-s="' + si + '" data-key="' + esc(key) + '" style="--c:' + color + '">' +
+    return '<span class="wb" style="--c:' + color + '">' +
       '<span class="fn">' + (fnRec ? esc(fnRec.vi) : '…') + '</span>' +
       '<span class="word">' + esc(token) + '</span>' +
       (gl ? '<span class="gl">' + esc(gl) + '</span>' : '') +
       '<span class="form">' + formTx + '</span></span>';
   }
 
-  function diagram(tokens, sf, si) {
+  function diagram(tokens, sf) {
     var counts = Object.create(null);
     return '<div class="diagram">' + tokens.map(function (t) {
-      return wbBlock(t, sf, counts, si);
+      return wbBlock(t, sf, counts);
     }).join('') + '</div>';
   }
 
@@ -197,10 +192,10 @@ var SA_HTML = (function () {
       '<em>bản sát nghĩa (wörtlich):</em> ' + w + ' <br><em>bản tự nhiên (natürlich):</em> <b>' + n + '</b></div>';
   }
 
-  function satzBlock(s, sf, i) {
+  function satzBlock(s, sf) {
     return '<div class="satz"><div class="head">Câu ' + s.n +
       ' – <span class="gk">' + esc(s.greek) + '</span></div><div class="body">' +
-      diagram(s.tokens, sf, i) + chunksTable(s.tokens, sf) + vtab(sf) + stepsList() +
+      diagram(s.tokens, sf) + chunksTable(s.tokens, sf) + vtab(sf) + stepsList() +
       '<p class="note">Ghi chú: ' + (sf && sf.note ? esc(sf.note) : '') + '</p>' +
       uebBox(sf) + '</div></div>';
   }
@@ -284,7 +279,7 @@ var SA_HTML = (function () {
     }).join('<br>');
 
     var satz = model.sentences.map(function (s, i) {
-      return satzBlock(s, fill && fill.sentences ? fill.sentences[i] : null, i);
+      return satzBlock(s, fill && fill.sentences ? fill.sentences[i] : null);
     }).join('\n');
     var fillPats = fill && fill.patterns ? fill.patterns : [];
     var pats = [0, 1, 2].map(function (i) {
