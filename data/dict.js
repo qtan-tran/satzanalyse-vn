@@ -4,7 +4,7 @@
  * Code: MIT License. ES5, không dependency. Xem docs/COPYRIGHT.md về nguồn và license.
  */
 window.SA_DICT = {
-  version: 3,
+  version: 3.1,
   source: 'Danh sách từ theo Omega (Ulrich Gebhardt), Kantharos Neu – CC BY-NC-SA 4.0',
   cols: ["lemma", "forms", "pos", "vi", "en", "keys"],
   tsv: `
@@ -108,7 +108,7 @@ window.SA_DICT = {
 δῆμος	δῆμος δήμου, ὁ	danh từ	cộng đồng dân cư; dân chúng	community, the people
 διό	διό	trạng từ	vì thế, do đó	therefore
 δόξα	δόξα δόξης, ἡ	danh từ	ý kiến; danh vọng; vẻ ngoài	opinion; reputation; appearance
-ἐγώ	ἐγώ, ἐμοῦ	đại từ	tôi, ta	I	ἐγὼ ἐμοῦ ἐμοὶ ἐμὲ
+ἐγώ	ἐγώ, ἐμοῦ	đại từ	tôi, ta	I	ἐγὼ ἐμοῦ ἐμοὶ ἐμὲ με
 ἐλπίζω	ἐλπίζω	động từ	hy vọng, trông mong	hope, expect
 ἐπί	ἐπί	giới từ	+Sở: trên, vào thời của; +Tặng: tại, dựa trên, nhằm; +Đối: đến, chống	on, at, over; against (+acc)	ἐπ
 εὐδαιμονία	εὐδαιμονία εὐδαιμονίας, ἡ	danh từ	hạnh phúc, phúc lành; sự thịnh vượng	happiness, prosperity

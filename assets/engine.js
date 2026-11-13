@@ -90,7 +90,7 @@ var SA = (function () {
    * engine.js). Engine vẫn chạy đầy đủ khi không có từ điển; dictLookup
    * chỉ trả về entry khi tra chắc chắn. */
   var IDX0 = null, IDX1 = null, IDX2 = null, LOOKUP_CACHE = Object.create(null);
-  var ENTRIES = null, STEM_N = null, STEM_V = null;
+  var ENTRIES = null, STEM_N = null, STEM_V = null, STEM_VM = null;
   var AMB = { ambiguous: true };
   var GREEK_RUN = /[\u0370-\u03FF\u1F00-\u1FFF\u2019\u02BC']+/g;
   var APOS_TAIL = /[\u2019\u02BC']+$/;
@@ -225,7 +225,11 @@ var SA = (function () {
    * temporal augment (ἦλθον), động từ co α (τιμᾷ), thân lỏng, động từ -μι,
    * kép đôi, bổ sung (ἔλαβον ≠ λαμβάνω). */
   var SN_ENDS = ['αις', 'οις', 'ους', 'ων', 'αι', 'οι', 'ας', 'αν', 'ην', 'ου', 'ω', 'ον', 'η', 'α', 'ε', 'ος'];
-  var SV_ENDS = ['ουσιν', 'ουσι', 'ουμεν', 'ομεν', 'ονται', 'οντο', 'ομεθα', 'ομην', 'εται', 'ετο', 'εσθε', 'ομαι', 'ειν', 'ουν', 'ετε', 'εις', 'ει', 'ον', 'ες', 'ε', 'ναι', 'σθαι'];
+  /* Phần 8: tách đuôi động từ chủ động / thể trung (medium). Đuôi medium chỉ
+   * khớp nghiêm về thân -ομαι trước (STEM_VM) để hoá giải thân trùng giữa
+   * cặp -ω/-ομαι cùng thân (φαίνω/φαίνομαι → φαίνεται = φαίνομαι). */
+  var SV_ACT = ['ουσιν', 'ουσι', 'ουμεν', 'ομεν', 'ειν', 'ουν', 'ετε', 'εις', 'ει', 'ον', 'ες', 'ε', 'ναι', 'εν'];
+  var SV_MED = ['ονται', 'οντο', 'εται', 'ετο', 'ομεθα', 'ομην', 'ομαι', 'εσθε', 'εσθαι', 'σθαι'];
   var SS_ENDS = ['σουσιν', 'σουσι', 'σουμεν', 'σαμεν', 'σατε', 'σαν', 'σας', 'σε', 'σεν', 'σων', 'σω', 'σεις', 'σει', 'σετε', 'σομεν', 'σαι', 'σαμην', 'σατο', 'σαντο'];
   var ST_ENDS = ['θησαν', 'θημεν', 'θητε', 'θηναι', 'θης', 'θην', 'θη'];
   /* Chuẩn hoá mọi sigma về medial σ: key2 không đổi ς, mà đuôi bóc ra
@@ -234,7 +238,7 @@ var SA = (function () {
     return key2(s).replace(/ς/g, 'σ');
   }
   (function () {
-    var a = [SN_ENDS, SV_ENDS, SS_ENDS, ST_ENDS], i, j;
+    var a = [SN_ENDS, SV_ACT, SV_MED, SS_ENDS, ST_ENDS], i, j;
     for (i = 0; i < a.length; i++) {
       for (j = 0; j < a[i].length; j++) a[i][j] = a[i][j].replace(/ς/g, 'σ');
     }
@@ -249,9 +253,11 @@ var SA = (function () {
     return m ? m[0] : null;
   }
 
-  /* Thân khớp 2 lemma khác nhau → AMB (mơ hồ, không tự điền). */
+  /* Thân khớp 2 lemma khác nhau → AMB (mơ hồ, không tự điền).
+   * Phần 8: chấp nhận thân 1 ký tự cho danh từ 2 chữ (γῆ → γ) để γῆν
+   * bóc đuôi được; thân 1 ký tự hiếm nên va chạm sẽ thành AMB như thường. */
   function addStemKey(idx, k, e) {
-    if (!k || k.length < 2) return;
+    if (!k || k.length < 1) return;
     var cur = idx[k];
     if (cur === undefined) { idx[k] = { e: e }; return; }
     if (cur === AMB) return;
@@ -260,7 +266,7 @@ var SA = (function () {
   }
 
   function buildStemIndex() {
-    STEM_N = Object.create(null); STEM_V = Object.create(null);
+    STEM_N = Object.create(null); STEM_V = Object.create(null); STEM_VM = Object.create(null);
     var i, e, w, bare, stem, last;
     for (i = 0; i < ENTRIES.length; i++) {
       e = ENTRIES[i];
@@ -269,9 +275,11 @@ var SA = (function () {
       bare = bk(w);
       if (posIsNounLike(e.pos)) {
         stem = null;
-        if (endsWith(bare, 'οσ') || endsWith(bare, 'ον') || endsWith(bare, 'η')) {
+        if (endsWith(bare, 'οσ') || endsWith(bare, 'ον')) {
           stem = bare.slice(0, -2);
-        } else if (endsWith(bare, 'α')) {
+        } else if (endsWith(bare, 'η') || endsWith(bare, 'α')) {
+          /* Phần 8: -η lấy slice(0, -1) (τιμή → τιμ, γῆ → γ); trước đây
+           * slice(0, -2) làm cụt mất phụ âm cuối (τιμή → τι) và γῆ → rỗng. */
           stem = bare.slice(0, -1);
         }
         if (stem) addStemKey(STEM_N, stem, e);
@@ -289,6 +297,7 @@ var SA = (function () {
         } else if (endsWith(bare, 'ομαι')) {
           stem = bare.slice(0, -4);
           addStemKey(STEM_V, stem, e);
+          addStemKey(STEM_VM, stem, e); /* Phần 8: index thân medium riêng */
         }
       }
     }
@@ -317,15 +326,27 @@ var SA = (function () {
   /* Thử bóc một chuỗi (đã bỏ dấu, có thể đã lược augment) theo mọi họ đuôi. */
   function tier3Collect(s, out) {
     var i, j, v, base, stripped, cands;
+    /* Danh từ: Phần 8 hạ còn v.length + 1 để bắt dạng ngắn (γῆν → γ + ν-đuôi,
+     * θεᾶς → θε); thân phải nằm trong index nên không thêm hit mơ hồ. */
     for (i = 0; i < SN_ENDS.length; i++) {
       v = SN_ENDS[i];
-      if (s.length >= v.length + 2 && endsWith(s, v)) {
+      if (s.length >= v.length + 1 && endsWith(s, v)) {
         pushStemHits(out, stemHit(STEM_N, [s.slice(0, -v.length)]));
       }
     }
-    for (i = 0; i < SV_ENDS.length; i++) {
-      v = SV_ENDS[i];
+    for (i = 0; i < SV_ACT.length; i++) {
+      v = SV_ACT[i];
       if (s.length >= v.length + 2 && endsWith(s, v)) {
+        pushStemHits(out, stemHit(STEM_V, [s.slice(0, -v.length)]));
+      }
+    }
+    /* Đuôi medium (Phần 8): tra index thân -ομai (STEM_VM) trước để hoá giải
+     * thân trùng -ω/-ομαι; STEM_V (toàn động từ) vẫn được tra song song cho
+     * dạng medium của động từ -ω (ἐλέγετο → λέγω). Trùng lemma tự khử. */
+    for (i = 0; i < SV_MED.length; i++) {
+      v = SV_MED[i];
+      if (s.length >= v.length + 2 && endsWith(s, v)) {
+        pushStemHits(out, stemHit(STEM_VM, [s.slice(0, -v.length)]));
         pushStemHits(out, stemHit(STEM_V, [s.slice(0, -v.length)]));
       }
     }
@@ -357,7 +378,7 @@ var SA = (function () {
     if (!ENTRIES) return null;
     if (!STEM_N) buildStemIndex();
     var bare = bk(token);
-    if (bare.length < 5) return null;
+    if (bare.length < 3) return null; /* Phần 8: hạ từ 5 xuống 3 để bắt dạng ngắn (ἔχει, ὅλην, με, γῆν); các điều kiện thân trong tier3Collect vẫn bảo vệ không bịa */
     var out = [];
     tier3Collect(bare, out);
     if (bare.charAt(0) === 'ε') tier3Collect(bare.slice(1), out); /* augment ἐ- */
