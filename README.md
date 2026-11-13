@@ -39,7 +39,7 @@ docs/                 ARCHITECTURE · ROADMAP · COPYRIGHT · FORMAT-SPEC · STY
 
 ## Lộ trình
 
-Xem `docs/ROADMAP.md`: Phần 1 khung + tool MVP ✅ → Phần 2 từ điển Hy Lạp–Việt (800 từ theo Kantharos Neu/Omega) ✅ → Phần 3 gợi ý hình thái (đuôi biến cách/chia) ✅ commit `8b4912a` → Phần 4 corpus mẫu từ readings bài 1–10 graecum-vn ✅ commit `111d222` → Phần 5 trau chuốt UI + cross-link hai chiều ✅ commit `b52bdd1` → Phần 6 bóc đuôi về lemma (tra ngược biến cách/augment + nhãn "bất biến" + đuôi so sánh) ✅ commit `c56661a` → Phần 7 worksheet tương tác (gán chức năng ngay trong bản xem trước, gán mang theo vào file HTML) (đã dựng chờ duyệt).
+Xem `docs/ROADMAP.md`: Phần 1 khung + tool MVP ✅ → Phần 2 từ điển Hy Lạp–Việt (800 từ theo Kantharos Neu/Omega) ✅ → Phần 3 gợi ý hình thái (đuôi biến cách/chia) ✅ commit `8b4912a` → Phần 4 corpus mẫu từ readings bài 1–10 graecum-vn ✅ commit `111d222` → Phần 5 trau chuốt UI + cross-link hai chiều ✅ commit `b52bdd1` → Phần 6 bóc đuôi về lemma (tra ngược biến cách/augment + nhãn "bất biến" + đuôi so sánh) ✅ commit `c56661a` → Phần 7 worksheet tương tác (gán chức năng ngay trong bản xem trước, gán mang theo vào file HTML) + lược ngắn hướng dẫn cho người mới ✅ commit `4a0d41f`.
 
 ## License
 
