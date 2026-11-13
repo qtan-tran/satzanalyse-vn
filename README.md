@@ -39,7 +39,7 @@ docs/                 ARCHITECTURE · ROADMAP · COPYRIGHT · FORMAT-SPEC · STY
 
 ## Lộ trình
 
-Xem `docs/ROADMAP.md`: Phần 1 khung + tool MVP ✅ → Phần 2 từ điển Hy Lạp–Việt (800 từ theo Kantharos Neu/Omega) ✅ → Phần 3 gợi ý hình thái (đuôi biến cách/chia) ✅ commit `8b4912a` → Phần 4 corpus mẫu từ readings bài 1–10 graecum-vn (đã dựng chờ duyệt) → Phần 5 Pages + cross-link hai chiều với portal và toolkit.
+Xem `docs/ROADMAP.md`: Phần 1 khung + tool MVP ✅ → Phần 2 từ điển Hy Lạp–Việt (800 từ theo Kantharos Neu/Omega) ✅ → Phần 3 gợi ý hình thái (đuôi biến cách/chia) ✅ commit `8b4912a` → Phần 4 corpus mẫu từ readings bài 1–10 graecum-vn ✅ commit `111d222` → Phần 5 trau chuốt UI + cross-link hai chiều (đã dựng chờ duyệt).
 
 ## License
 

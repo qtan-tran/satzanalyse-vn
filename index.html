@@ -16,8 +16,9 @@
     <a href="index.html" aria-current="page">Công cụ</a>
     <a href="huong-dan.html">Hướng dẫn</a>
     <a href="corpus.html">Corpus</a>
-    <a href="https://github.com/qtan-tran/graecum-vn" target="_blank">Graecum VN ↗</a>
-    <a href="https://github.com/qtan-tran/ancient-greek-toolkit" target="_blank">Toolkit ↗</a>
+    <a href="https://qtan-tran.github.io/graecum-vn/" target="_blank">Graecum VN ↗</a>
+    <a href="https://qtan-tran.github.io/ancient-greek-toolkit/" target="_blank">Toolkit ↗</a>
+    <a href="https://github.com/qtan-tran/satzanalyse-vn" target="_blank">GitHub ↗</a>
   </nav>
 </header>
 
@@ -25,7 +26,7 @@
 
 <div class="hint">Dán văn bản Hy Lạp (giữ nguyên dấu, tối đa <b>1.500 ký tự</b> ≈ 15–20 câu mỗi lần).
 Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng nhất</b> (danh sách từ theo giáo trình Kantharos/Omega) để điền sẵn nghĩa, đoán <b>hình thái theo đuôi</b> (mạo từ, đại từ quen thuộc và εἰμί là chắc chắn; còn lại là gợi ý kèm dấu ?), rồi sinh <b>khung phân tích để bạn tự điền phần hình thái và chức năng</b> – tool không bịa phân tích.
-Ô để trống là những chỗ cần bạn phân tích. Xuất PDF thế nào? Xem trang <a href="huong-dan.html">Hướng dẫn</a>.</div>
+Ô để trống là những chỗ cần bạn phân tích. Xuất PDF thế nào? Xem trang <a href="huong-dan.html">Hướng dẫn</a>. Chưa có câu để thử? Bấm <b>Thử câu mẫu</b> để nạp John 1:1.</div>
 
 <div class="err" id="err"></div>
 <div class="ok" id="ok"></div>
@@ -39,6 +40,7 @@ Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng n
 
 <div class="actions">
   <button id="btn-run">Tạo khung phân tích</button>
+  <button id="btn-example" class="ghost">Thử câu mẫu</button>
 </div>
 
 <h2 class="sec">Kết quả</h2>
@@ -48,8 +50,9 @@ Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng n
   <button id="btn-dl-html">Tải satzanalyse.html</button>
   <button id="btn-dl-tex" class="ghost">Tải satzanalyse.tex</button>
   <button id="btn-copy-tex" class="ghost">Chép nội dung .tex</button>
+  <button id="btn-open-tab" class="ghost">Mở khung trong tab mới</button>
 </div>
-<p class="note" id="preview-note" style="display:none">Xem trước bản HTML bên dưới; mở rộng/full screen bằng nút trong khung xem trước của trình duyệt.</p>
+<p class="note" id="preview-note" style="display:none">Xem trước bản HTML bên dưới; bấm <b>Mở khung trong tab mới</b> để đọc ở cửa sổ riêng.</p>
 <iframe id="preview" title="Xem trước khung phân tích" style="display:none"></iframe>
 
 <h2 class="sec">Chú giải nhanh</h2>
@@ -90,7 +93,18 @@ Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng n
   var elPreviewNote = document.getElementById('preview-note');
   var elPreview = document.getElementById('preview');
   var elChips = document.getElementById('chips');
-  var lastHTML = '', lastTEX = '', lastName = 'satzanalyse';
+  var lastHTML = '', lastTEX = '', lastName = 'satzanalyse', previewURL = null, tabURL = null;
+
+  /* Câu mẫu John 1:1 (trùng corpus L6) để thử ngay lần đầu. */
+  var SAMPLE_TITLE = 'John 1:1';
+  var SAMPLE_TEXT = 'ἐν ἀρχῇ ἦν ὁ λόγος, καὶ ὁ λόγος ἦν πρὸς τὸν θεόν, καὶ θεὸς ἦν ὁ λόγος.';
+
+  document.getElementById('btn-example').addEventListener('click', function () {
+    elTitle.value = SAMPLE_TITLE;
+    elText.value = SAMPLE_TEXT;
+    countChars();
+    elText.focus();
+  });
 
   /* Dải màu chức năng ở trang tool */
   elChips.innerHTML = SA.FN.map(function (f) {
@@ -115,6 +129,12 @@ Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng n
     elText.className = over ? 'over' : '';
   }
   elText.addEventListener('input', countChars);
+  elText.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('btn-run').click();
+    }
+  });
   countChars();
 
   function fail(msg) {
@@ -175,7 +195,16 @@ Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng n
     elActions.style.display = 'block';
     elPreviewNote.style.display = 'block';
     elPreview.style.display = 'block';
-    elPreview.src = URL.createObjectURL(new Blob([lastHTML], { type: 'text/html;charset=utf-8' }));
+    if (previewURL) { URL.revokeObjectURL(previewURL); }
+    previewURL = URL.createObjectURL(new Blob([lastHTML], { type: 'text/html;charset=utf-8' }));
+    elPreview.src = previewURL;
+  });
+
+  document.getElementById('btn-open-tab').addEventListener('click', function () {
+    if (!lastHTML) return;
+    if (tabURL) { URL.revokeObjectURL(tabURL); }
+    tabURL = URL.createObjectURL(new Blob([lastHTML], { type: 'text/html;charset=utf-8' }));
+    window.open(tabURL, '_blank');
   });
 
   document.getElementById('btn-dl-html').addEventListener('click', function () {

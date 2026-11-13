@@ -10,7 +10,7 @@
 | `ancient-greek-toolkit` | Hub công cụ tra cứu (lexica, văn bản, gõ chữ, luyện tập, tham khảo) | https://github.com/qtan-tran/ancient-greek-toolkit |
 | **`satzanalyse-vn`** (repo này) | Platform phân tích câu: paste câu Hy Lạp tự do → khung phân tích HTML tĩnh + `.tex` | https://github.com/qtan-tran/satzanalyse-vn |
 
-Ba repo độc lập về deploy, cross-link nhau: portal giới thiệu tool ở mục "Công cụ học kèm", toolkit liệt kê satzanalyse-vn trong danh mục practice, satzanalyse-vn link ngược về hai repo trên.
+Ba repo độc lập về deploy, cross-link nhau: portal giới thiệu tool ở mục "Công cụ học kèm" (homepage + `README.md` + `toolkit.md`), toolkit liệt kê satzanalyse-vn trong danh mục practice (cả bản tiếng Việt lẫn `en/`), satzanalyse-vn link ngược về hai site live (qtan-tran.github.io/graecum-vn + /ancient-greek-toolkit) kèm link repo GitHub của chính nó.
 
 ## 2. Luồng dữ liệu (100% client-side)
 

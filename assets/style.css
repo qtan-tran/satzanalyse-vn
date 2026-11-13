@@ -65,3 +65,15 @@ footer.site a{color:var(--accent)}
 code{background:#f0f3f8;border-radius:3px;padding:1px 5px;font-size:.92em}
 kbd{font-family:system-ui,Arial,sans-serif;border:1px solid #b8c4d8;border-bottom-width:2px;
       border-radius:4px;padding:1px 6px;background:#f8fafd;font-size:.9em}
+
+/* Mobile: page hẹp lại, nav wrap, iframe thấp hơn */
+@media (max-width:640px){
+  .page{padding:0 16px 40px}
+  header.site{margin:0 -16px 22px;padding:16px 16px 10px}
+  footer.site{margin:40px -16px 0;padding:14px 16px}
+  header.site h1{font-size:22px}
+  header.site .tagline{font-size:13.5px}
+  nav.site{line-height:1.9}
+  nav.site a{margin-right:12px;display:inline-block}
+  iframe#preview{height:400px}
+}
