@@ -5,6 +5,9 @@
  * Corpus mẫu (Phần 4, FORMAT-SPEC §9): build(model, fill) nhận fill tuỳ chọn
  * {hint, vi, sentences[], patterns[]} điền sẵn chức năng/dạng/gloss/bảng/
  * bản dịch/ô Pattern cho câu mẫu; không có fill thì sinh khung để trống như cũ.
+ * Phần 7 (FORMAT-SPEC §10): mỗi .wb mang thuộc tính tĩnh data-s (số câu) và
+ * data-key (khóa token#n) để worksheet trong trang tool tham chiếu khi gán
+ * chức năng; bản xuất vẫn tĩnh, không <script>.
  * Code: MIT License. ES5, không dependency. */
 var SA_HTML = (function () {
   'use strict';
@@ -121,7 +124,7 @@ var SA_HTML = (function () {
     return null;
   }
 
-  function wbBlock(token, sf, counts) {
+  function wbBlock(token, sf, counts, si) {
     counts[token] = (counts[token] || 0) + 1;
     var key = counts[token] === 1 ? token : token + '#' + counts[token];
     var e = SA.dictLookup(token);
@@ -132,17 +135,19 @@ var SA_HTML = (function () {
       (e ? shortGloss(e.vi) : '');
     var formTx = sf && sf.form && sf.form[key] !== undefined ?
       esc(sf.form[key]) : formText(m);
-    return '<span class="wb" style="--c:' + color + '">' +
+    /* data-s/data-key (Phần 7): thuộc tính tĩnh cho worksheet trong trang
+     * tool định vị khối từ theo (số câu, khóa token#n); bản xuất không script. */
+    return '<span class="wb" data-s="' + si + '" data-key="' + esc(key) + '" style="--c:' + color + '">' +
       '<span class="fn">' + (fnRec ? esc(fnRec.vi) : '…') + '</span>' +
       '<span class="word">' + esc(token) + '</span>' +
       (gl ? '<span class="gl">' + esc(gl) + '</span>' : '') +
       '<span class="form">' + formTx + '</span></span>';
   }
 
-  function diagram(tokens, sf) {
+  function diagram(tokens, sf, si) {
     var counts = Object.create(null);
     return '<div class="diagram">' + tokens.map(function (t) {
-      return wbBlock(t, sf, counts);
+      return wbBlock(t, sf, counts, si);
     }).join('') + '</div>';
   }
 
@@ -192,10 +197,10 @@ var SA_HTML = (function () {
       '<em>bản sát nghĩa (wörtlich):</em> ' + w + ' <br><em>bản tự nhiên (natürlich):</em> <b>' + n + '</b></div>';
   }
 
-  function satzBlock(s, sf) {
+  function satzBlock(s, sf, i) {
     return '<div class="satz"><div class="head">Câu ' + s.n +
       ' – <span class="gk">' + esc(s.greek) + '</span></div><div class="body">' +
-      diagram(s.tokens, sf) + chunksTable(s.tokens, sf) + vtab(sf) + stepsList() +
+      diagram(s.tokens, sf, i) + chunksTable(s.tokens, sf) + vtab(sf) + stepsList() +
       '<p class="note">Ghi chú: ' + (sf && sf.note ? esc(sf.note) : '') + '</p>' +
       uebBox(sf) + '</div></div>';
   }
@@ -218,11 +223,8 @@ var SA_HTML = (function () {
     return '<table class="vocab">' +
       '<tr><th>Dạng trong văn bản</th><th>Từ điển</th><th>Từ loại</th>' +
       '<th>Dạng (gợi ý)</th><th>Tiếng Việt</th><th>English</th><th>★</th></tr>' + rows + '</table>' +
-      '<p class="note">★ = tra thấy trong từ điển 800 từ (danh sách từ theo Kantharos/Omega). ' +
-      'Dòng trống = không tra thấy: bạn tự tra thêm rồi điền. ' +
-      '"(bóc đuôi)" = đoán ngược về từ điển (bóc đuôi biến cách/chia + lược augment ἐ-): nghĩa đúng nhưng dạng gốc chỉ là gợi ý, hãy kiểm chứng. ' +
-      'Dạng mơ hồ (khớp nhiều từ khác nhau sau khi bỏ dấu thanh) được cố ý để trống. ' +
-      'Cột "Dạng (gợi ý)": đoán theo bảng đuôi L1–10; dấu "?" = hãy kiểm chứng.</p>';
+      '<p class="note">★ = tra thấy trong từ điển 800 từ. Dòng trống = không tra thấy: bạn tự tra rồi điền. ' +
+      '"(bóc đuôi)" = đoán ngược về từ điển – kiểm chứng. "?" = đoán theo bảng đuôi – kiểm chứng.</p>';
   }
 
   /* Pattern box: không có fill → ô bài tập (prompt rỗng cho người học);
@@ -268,8 +270,7 @@ var SA_HTML = (function () {
     }
     return '<table><tr><th>Đuôi</th><th>Nhận biết dạng</th><th>Ví dụ trong văn bản</th></tr>' +
       rows + tail + '</table>' +
-      '<p class="note">Bảng tự động theo bảng đuôi L1–10: mọi dòng đều là gợi ý – hãy kiểm chứng. ' +
-      'Dạng đóng (mạo từ, đại từ quen thuộc, εἰμί) và từ bất biến không có đuôi nên không nằm ở đây.</p>';
+      '<p class="note">Mọi dòng là gợi ý – hãy kiểm chứng. Dạng đóng và từ bất biến không có đuôi nên không vào bảng này.</p>';
   }
 
   /* build(model, fill): fill tuỳ chọn của corpus mẫu (Phần 4, FORMAT-SPEC §9):
@@ -283,7 +284,7 @@ var SA_HTML = (function () {
     }).join('<br>');
 
     var satz = model.sentences.map(function (s, i) {
-      return satzBlock(s, fill && fill.sentences ? fill.sentences[i] : null);
+      return satzBlock(s, fill && fill.sentences ? fill.sentences[i] : null, i);
     }).join('\n');
     var fillPats = fill && fill.patterns ? fill.patterns : [];
     var pats = [0, 1, 2].map(function (i) {
@@ -315,23 +316,18 @@ var SA_HTML = (function () {
       '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
       '<title>' + esc(title) + '</title>\n<style>\n' + CSS + '\n</style>\n</head>\n<body>\n' +
       '<div class="page">\n' +
-      '<div class="hint no-print">In ra PDF: <b>Ctrl/Cmd+P → Save as PDF</b> (CSS in sẵn: mỗi câu một trang). ' +
-      'Xuất PDF LaTeX: biên dịch file .tex đi kèm qua XeLaTeX (xem trang Hướng dẫn của Satzanalyse VN).</div>\n' +
+      '<div class="hint no-print">In ra PDF: <b>Ctrl/Cmd+P → Save as PDF</b> (mỗi câu một trang). Bản .tex đi kèm: biên dịch qua XeLaTeX (xem trang Hướng dẫn).</div>\n' +
       '<h1>' + esc(title) + '</h1>\n<div class="sub">' + esc(sub) + '</div>\n' +
       '<div class="focus">' + focus + '</div>\n' +
       '<div class="box"><div class="bt">Văn bản gốc</div><div class="bb orig">' + orig + '</div></div>\n' +
       '<div class="box"><div class="bt">Chú giải</div><div class="bb">' + chipRow() +
       'Mỗi khối từ có ba tầng: <b>chức năng câu</b> (trên) – <b>từ</b> (giữa) – <b>dạng hình thái</b> (dưới).<br>' +
-      'Nhóm khung (grp): khung bao AcI hoặc mệnh đề phụ, kèm nhãn chức năng (ví dụ: "AcI → tân ngữ đối cách của λέγω").<br>' +
-      'Từ vựng: gloss tiếng Việt ngay dưới mỗi từ (nếu có) và bảng PHẦN 2 được điền sẵn khi tra thấy trong từ điển 800 từ; ' +
-      'không tra thấy thì để trống cho bạn tự điền.<br>' +
-      'Gợi ý hình thái: ô dạng kết thúc "?" là đoán theo đuôi – kiểm chứng rồi mới dùng; ' +
-      'điểm dễ nhầm thì 2 khả năng (tách " / "), khả năng cao nhất đứng đầu; "(dạng?)" = chưa đoán được; "bất biến" = tiểu từ/liên từ/giới từ/trạng từ không biến cách (chắc chắn, không kèm ?). ' +
+      'Ô trống = bạn tự điền – tool không bịa phân tích. "?" = đoán theo đuôi, hãy kiểm chứng; ' +
+      '"bất biến" = tiểu từ/liên từ/giới từ/trạng từ không biến cách.<br>' +
+      'Sperrstellung: sở hữu cách xen giữa mạo từ và danh từ → ba khối liền nhau (mạo từ | định ngữ | danh từ).<br>' +
       'Viết tắt: Sg./Pl. = số ít/số nhiều; m./f./n. = đực/cái/trung; Nom./Gen./Dat./Acc. = chủ/sở hữu/tặng/đối cách; ' +
       'ch 1/2/3 = biến cách thứ nhất/hai/ba; TD/BN = thể trung/bị động.<br>' +
-      'Sperrstellung (hyphenated attribute position): sở hữu cách xen giữa mạo từ và danh từ ' +
-      'tạo ba khối liền nhau: mạo từ | cụm sở hữu cách (định ngữ) | danh từ.<br>' +
-      'Bảng "Dịch theo cụm" được chia mặc định ~4 từ/cụm – hãy tự chỉnh lại theo nhóm nghĩa.</div></div>\n' +
+      'Chi tiết phương pháp: trang Hướng dẫn của Satzanalyse VN.</div></div>\n' +
       '<h2 class="sec">PHẦN 1 – Phân tích trực quan: từng câu một</h2>\n' +
       satz + '\n' +
       '<div class="box"><div class="bt">Bản dịch toàn văn</div><div class="bb">' + fullVi + '</div></div>\n' +

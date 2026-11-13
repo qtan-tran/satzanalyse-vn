@@ -1,4 +1,4 @@
-# FORMAT-SPEC – đặc tả khung phân tích (v1.3, Phần 1–4)
+# FORMAT-SPEC – đặc tả khung phân tích (v1.5, Phần 1–7)
 
 > Đặc tả cấu trúc hai định dạng xuất song song từ cùng một model dữ liệu, theo đúng cấu trúc canvas Satzanalyse hiện tại + quy ước bổ sung (bảng "Dịch theo cụm" sau mỗi diagram, gloss nghĩa trong Wortblöcke, từ điển tích hợp Phần 2 – xem §5; gợi ý hình thái Phần 3 – xem §6; corpus mẫu Phần 4 – xem §9). Không render PDF trong tool; người dùng tự xuất (xem `huong-dan.html`).
 
@@ -36,10 +36,10 @@ Màu chuẩn (dùng chung cả hai định dạng + UI tool): Prad `#1F5FBF`, Su
 1. `h1` tiêu đề (default "Satzanalyse") + `.sub` mô tả ngắn (default "Phân tích câu tiếng Hy Lạp cổ") + `.focus` dòng mô tả.
 2. `.hint.no-print`: hướng dẫn in (Ctrl/Cmd+P → Save as PDF; mỗi câu một trang).
 3. Khung **"Văn bản gốc"** (`box`): câu đánh số (1) (2) … giữ nguyên dấu.
-4. Khung **"Chú giải"** (đúng scope khung Chú giải của skill bản cập nhật: ba tầng của khối từ + giải thích nhóm + quy tắc Sperrstellung): dải `.chip` 14 chức năng; giải thích ba tầng của khối từ; **giải thích nhóm (grp)**: khung bao AcI hoặc mệnh đề phụ kèm nhãn chức năng (ví dụ: "AcI → tân ngữ đối cách của λέγω"); quy tắc Sperrstellung (sở hữu cách xen giữa mạo từ và danh từ → ba khối liền: mạo từ | cụm sở hữu cách (định ngữ) | danh từ); ghi chú bảng cụm chia mặc định ~4 từ, tự chỉnh theo nhóm nghĩa.
+4. Khung **"Chú giải"** (bản lược ngắn theo góp ý duyệt Phần 7 – new user không bị rối, chi tiết phương pháp chuyển sang trang Hướng dẫn): dải `.chip` 14 chức năng; ba tầng của khối từ; quy tắc đọc: ô trống = tự điền (tool không bịa), "?" = đoán theo đuôi cần kiểm chứng, "bất biến" = không biến cách; quy tắc Sperrstellung (sở hữu cách xen giữa mạo từ và danh từ → ba khối liền: mạo từ | định ngữ | danh từ); bộ viết tắt; dòng dẫn về trang Hướng dẫn.
 5. `h2` **PHẦN 1 – Phân tích trực quan: từng câu một**; mỗi câu một khung `.satz`:
    - head "Câu n – [câu Hy Lạp]";
-   - diagram: mỗi token một `.wb` (fn `…`, word = token, gl = gloss tiếng Việt ngắn khi tra thấy trong từ điển – xem §5, form = gợi ý hình thái – xem §6: dạng đóng ghi thẳng, đoán theo đuôi kèm " ?", không đoán được thì `(dạng?)`);
+   - diagram: mỗi token một `.wb` (fn `…`, word = token, gl = gloss tiếng Việt ngắn khi tra thấy trong từ điển – xem §5, form = gợi ý hình thái – xem §6: dạng đóng ghi thẳng, đoán theo đuôi kèm " ?", không đoán được thì `(dạng?)`); từ Phần 7 mỗi `.wb` mang thuộc tính tĩnh `data-s` (số thứ tự câu, 0-based) và `data-key` (khóa token#n như §9) để worksheet trong trang tool tham chiếu – thuộc tính là metadata, bản xuất vẫn không `<script>`;
    - **bảng `.chunks` "Dịch theo cụm (cách nối nghĩa)"** 3 cột: Cụm từ (Hy Lạp) | English | Tiếng Việt – cột Hy Lạp pre-fill theo cụm ~4 từ, hai cột còn lại để trống;
    - `.vtab` 8 cột (Dạng | Từ điển | Ngôi | Số | Thời | Thức | Thể | Chủ ngữ) + 1 dòng hint "(điền các dạng động từ được chia của câu vào đây)";
    - `ol.steps`: 7 dòng prefilled = prompt gợi nhớ phương pháp (xem §4);
@@ -56,7 +56,7 @@ Màu chuẩn (dùng chung cả hai định dạng + UI tool): Prad `#1F5FBF`, Su
 ## 3. Cấu trúc bản xuất .tex (XeLaTeX/Overleaf)
 
 - Preamble lấy **1:1** từ định dạng canvas (fontspec FreeSerif/DejaVu, macro `\w \en \grp \chip`, môi trường `satz vtab steps ueb pat` – không đổi macro). Ngay sau preamble thêm block `\renewcommand{\labKEY}{nhãn tiếng Việt}` cho 14 key ở §1 (macro giữ nguyên, chỉ đổi nội dung nhãn; quy ước portal: không thuật ngữ Đức trong bản publish).
-- Thân tài liệu: `center` tiêu đề/mô tả → khung `satz` "Văn bản gốc" (câu đánh số, `{\grt …}`) → khung `satz` "Chú giải" (dải `\chip`, giải thích ba tầng + nhóm `\grp` + Sperrstellung) → `\clearpage` `section*` PHẦN 1 → mỗi câu: `\begin{satz}{Câu n – {\grt …}}` chứa:
+- Thân tài liệu: `center` tiêu đề/mô tả → khung `satz` "Văn bản gốc" (câu đánh số, `{\grt …}`) → khung `satz` "Chú giải" (bản lược ngắn như §2.4: dải `\chip`, ba tầng, quy tắc ô trống/"?"/"bất biến", Sperrstellung, bộ viết tắt, dẫn về trang Hướng dẫn) → `\clearpage` `section*` PHẦN 1 → mỗi câu: `\begin{satz}{Câu n – {\grt …}}` chứa:
   - comment hướng dẫn điền `\w{KEY}{Khối từ}{Dạng}`;
   - comment `% Gợi ý từ điển …` liệt kê gloss các token tra thấy trong từ điển (§5; không có token nào tra thấy thì không có dòng này);
   - comment `% Gợi ý hình thái …` liệt kê dạng đoán được của các token (§6; không token nào thì không có dòng này);
@@ -150,7 +150,8 @@ Cùng lemma gặp ở nhiều mục nghĩa (ἄρα, ἤ) → **gộp gloss** b�
 - v1.1 (Phần 2): từ điển tích hợp `data/dict.js` (chi tiết quy tắc ở §5): pre-fill cột Từ điển/Từ loại/Tiếng Việt/English/★ khi tra thấy; gloss ngắn trong Wortblock; không thấy/mơ hồ → để trống.
 - v1.2 (Phần 3): gợi ý hình thái `data/morph.js` (chi tiết ở §6): dạng đóng conf 2 ghi thẳng, đoán theo đuôi conf 1 kèm "?"; cột "Dạng (gợi ý)" trong bảng vocab (HTML 7 cột / longtable 6 cột); bảng đuôi sinh tự động; comment `% Gợi ý hình thái` trong .tex.
 - v1.3 (Phần 4): corpus mẫu `data/corpus.js` + fill API của exporter HTML (chi tiết ở §9): 10 câu mẫu L1–10 biên soạn tay (kèm 3 ô Pattern/câu), gallery `corpus.html`, xuất HTML pre-fill qua `{hint, vi, sentences[], patterns[]}`; .tex fill là lộ trình (chưa làm).
-- v1.4 (Phần 6, hiện hành): tier 3 bóc đuôi về lemma trong `dictLookup` (chi tiết ở §5): bóc đuôi biến cách/chia + lược augment ἐ-, tra ngược về index thân; đúng 1 lemma → entry `derived: true` + nhãn "(bóc đuôi)" trong xuất HTML/.tex; dạng đóng τίνες/τινάς vào cột keys (dict v3). morph v2: tiểu từ/liên từ/giới từ/trạng từ ghi "bất biến" (conf 2); thêm 27 đuôi so sánh hơn (-τερ-) và so sánh nhất (-τατ-) vào bảng noun (§6).
+- v1.4 (Phần 6): tier 3 bóc đuôi về lemma trong `dictLookup` (chi tiết ở §5): bóc đuôi biến cách/chia + lược augment ἐ-, tra ngược về index thân; đúng 1 lemma → entry `derived: true` + nhãn "(bóc đuôi)" trong xuất HTML/.tex; dạng đóng τίνες/τινάς vào cột keys (dict v3). morph v2: tiểu từ/liên từ/giới từ/trạng từ ghi "bất biến" (conf 2); thêm 27 đuôi so sánh hơn (-τερ-) và so sánh nhất (-τατ-) vào bảng noun (§6).
+- v1.5 (Phần 7, hiện hành): worksheet tương tác trong trang tool (chi tiết ở §10): `.wb` mang `data-s`/`data-key` (§2); gán chức năng của người học ghi vào fill `sentences[].fn` khi tải file HTML; bản xuất vẫn tĩnh, không `<script>`; `.tex` không đổi.
 
 ## 9. Corpus mẫu L1–10 (v1.3, Phần 4)
 
@@ -165,3 +166,15 @@ Cùng lemma gặp ở nhiều mục nghĩa (ἄρα, ἤ) → **gộp gloss** b�
 **Fill API (exporter HTML)**: `SA_HTML.build(model, fill)` với fill `{ hint, vi, sentences[], patterns[] }`. Không có fill (hoặc fill thiếu ô) → khung để trống/prompt rỗng như Phần 3; vtab rỗng → hint kiểm tra ellipse; `vocabTable(vocab, tf)` nhận dạng chốt (không "?") + gloss tác giả khi từ điển trống; `patterns[]` điền sẵn 3 ô Pattern, thiếu thì render prompt rỗng cho người học.
 
 **Gallery `corpus.html`**: nạp dict → morph → corpus → engine → exporter-html; nhóm theo bài; render lười (khung phân tích đầy đủ trong iframe `srcdoc` chỉ khi bấm xem); nút tải HTML từng câu (Blob). Exporter HTML giữ tương thích ngược: `build(model)` không fill vẫn hoạt động như Phần 3.
+
+## 10. Worksheet tương tác trong trang tool (v1.5, Phần 7)
+
+**Nguyên tắc giữ nguyên**: bản xuất tải về vẫn là HTML tĩnh không `<script>` (§2); tương tác chỉ sống trong bản xem trước (iframe blob same-origin) của trang tool, và **tool không tự gán chức năng** – worksheet là nơi người học tự ghi nhận phân tích (không bịa).
+
+**Cơ chế**:
+- Exporter phát thuộc tính tĩnh trên mỗi `.wb`: `data-s` (số thứ tự câu 0-based) + `data-key` (khóa token#n, quy ước §9). Thuộc tính không phải script nên nằm trong cả file tải về (harmless, metadata).
+- Trang tool (`index.html`) chèn một script tương tác nhỏ **chỉ vào HTML của bản xem trước** (không vào file tải về): click khối từ → chọn; Shift + click → xoá gán; nhấn `assign`/`reset` đổi nội dung tầng fn + biến `--c` màu chuẩn của khối; liên lạc cha–con qua `postMessage` với cờ `saWs` (iframe → cha: `saWs:1`; cha → iframe: `saWs:2`).
+- Trạng thái gán (`assign[s][key] = FNkey`) giữ ở trang tool; mỗi lần gán/xoá, trang tool build lại file tải về qua `SA_HTML.build(model, fill)` với fill `{ sentences[]: { fn: assign[s] } }` (tái dùng fill API Phần 4, khóa token#n) → file HTML tải về mang theo gán (nhãn tiếng Việt + màu), vẫn không script.
+- Phím tắt (khi đã có kết quả): 1–9, 0 gán 10 chức năng đầu; Backspace/Delete xoá gán khối đang chọn; Esc bỏ chọn.
+
+**Giới hạn chủ đích**: .tex không nhận fill (giữ quyết định Phần 4 – .tex fill là lộ trình §8); worksheet không gán dạng hình thái/gloss/bảng (chỉ chức năng câu); không lưu gán giữa các phiên (không localStorage – static, no-build, không theo dõi người dùng).

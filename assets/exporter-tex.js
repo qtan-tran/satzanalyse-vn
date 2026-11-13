@@ -109,11 +109,12 @@ var SA_TEX = (function () {
   function legendBox() {
     return '\\begin{satz}{Chú giải}\n' + chipsLine() + '\\\\[4pt]\n' +
       'Mỗi khối từ (\\w) có ba tầng: chức năng câu (trên) – từ (giữa) – dạng hình thái (dưới).\\\\\n' +
-      'Nhóm khung (\\grp): khung bao AcI (cInf) hoặc mệnh đề phụ (cKonj) kèm nhãn chức năng.\\\\\n' +
-      'Sperrstellung (hyphenated attribute position): sở hữu cách xen giữa mạo từ và danh từ ' +
-      'tạo ba khối liền nhau: mạo từ | cụm sở hữu cách (định ngữ) | danh từ.\\\\\n' +
-      'Gợi ý hình thái (Phần 3): "?" = đoán theo đuôi – kiểm chứng; điểm dễ nhầm thì 2 khả năng (tách " / "), khả năng cao nhất đứng đầu; "bất biến" = tiểu từ/liên từ/giới từ/trạng từ không biến cách (chắc chắn, không kèm ?). Viết tắt: Sg./Pl. = số ít/số nhiều; m./f./n. = đực/cái/trung; Nom./Gen./Dat./Acc. = chủ/sở hữu/tặng/đối cách; ch 1/2/3 = biến cách thứ nhất/hai/ba; TD/BN = thể trung/bị động.\\\\\n' +
-      'Bảng "Dịch theo cụm" chia mặc định $\\sim$4 từ/cụm – hãy tự chỉnh lại theo nhóm nghĩa.\n' +
+      'Ô trống = bạn tự điền – tool không bịa phân tích. "?" = đoán theo đuôi, hãy kiểm chứng; ' +
+      '"bất biến" = tiểu từ/liên từ/giới từ/trạng từ không biến cách.\\\\\n' +
+      'Sperrstellung: sở hữu cách xen giữa mạo từ và danh từ \\textrightarrow{} ba khối liền nhau (mạo từ | định ngữ | danh từ).\\\\\n' +
+      'Viết tắt: Sg./Pl. = số ít/số nhiều; m./f./n. = đực/cái/trung; Nom./Gen./Dat./Acc. = chủ/sở hữu/tặng/đối cách; ' +
+      'ch 1/2/3 = biến cách thứ nhất/hai/ba; TD/BN = thể trung/bị động.\\\\\n' +
+      'Chi tiết phương pháp: trang Hướng dẫn của Satzanalyse VN.\n' +
       '\\end{satz}\n';
   }
 

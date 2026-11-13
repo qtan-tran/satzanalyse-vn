@@ -51,6 +51,11 @@ button.ghost:hover{background:#eef4fd}
 button:disabled{opacity:.45;cursor:not-allowed}
 .chips{margin:8px 0 4px;line-height:2.1}
 .chip{font:700 12px system-ui,Arial,sans-serif;margin-right:10px;white-space:nowrap}
+.wchips{margin:4px 0 2px;line-height:2.2}
+.wchip{font:700 12px system-ui,Arial,sans-serif;margin:2px 10px 2px 0;padding:3px 12px;
+       border:1.5px solid #d5dce6;border-radius:13px;background:#fff;cursor:pointer;white-space:nowrap}
+.wchip:hover{border-color:currentColor;background:#f6f9fd}
+.wchip .wnum{font-weight:400;color:#888;margin-right:2px}
 .actions{margin-top:6px}
 .summary{font-family:system-ui,Arial,sans-serif;font-size:13.5px;color:#333}
 table{border-collapse:collapse;width:100%;font-size:13.5px}
