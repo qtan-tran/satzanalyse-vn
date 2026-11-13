@@ -112,7 +112,7 @@ var SA_TEX = (function () {
       'Nhóm khung (\\grp): khung bao AcI (cInf) hoặc mệnh đề phụ (cKonj) kèm nhãn chức năng.\\\\\n' +
       'Sperrstellung (hyphenated attribute position): sở hữu cách xen giữa mạo từ và danh từ ' +
       'tạo ba khối liền nhau: mạo từ | cụm sở hữu cách (định ngữ) | danh từ.\\\\\n' +
-      'Gợi ý hình thái (Phần 3): "?" = đoán theo đuôi – kiểm chứng; điểm dễ nhầm thì 2 khả năng (tách " / "), khả năng cao nhất đứng đầu. Viết tắt: Sg./Pl. = số ít/số nhiều; m./f./n. = đực/cái/trung; Nom./Gen./Dat./Acc. = chủ/sở hữu/tặng/đối cách; ch 1/2/3 = biến cách thứ nhất/hai/ba; TD/BN = thể trung/bị động.\\\\\n' +
+      'Gợi ý hình thái (Phần 3): "?" = đoán theo đuôi – kiểm chứng; điểm dễ nhầm thì 2 khả năng (tách " / "), khả năng cao nhất đứng đầu; "bất biến" = tiểu từ/liên từ/giới từ/trạng từ không biến cách (chắc chắn, không kèm ?). Viết tắt: Sg./Pl. = số ít/số nhiều; m./f./n. = đực/cái/trung; Nom./Gen./Dat./Acc. = chủ/sở hữu/tặng/đối cách; ch 1/2/3 = biến cách thứ nhất/hai/ba; TD/BN = thể trung/bị động.\\\\\n' +
       'Bảng "Dịch theo cụm" chia mặc định $\\sim$4 từ/cụm – hãy tự chỉnh lại theo nhóm nghĩa.\n' +
       '\\end{satz}\n';
   }
@@ -189,7 +189,7 @@ var SA_TEX = (function () {
     var rows = vocab.map(function (t) {
       var e = SA.dictLookup(t);
       var m = SA.morphLookup(t, e);
-      return '{\\grt ' + esc(t) + '} & ' + (e ? '{\\grt ' + esc(e.lemma) + '}' : '') +
+      return '{\\grt ' + esc(t) + '} & ' + (e ? '{\\grt ' + esc(e.lemma) + '}' + (e.derived ? ' (bóc đuôi)' : '') : '') +
         ' & ' + (e ? esc(e.pos) : '') +
         ' & ' + (m ? esc(m.a) + (m.conf < 2 ? ' ?' : '') : '') +
         ' & ' + (e ? esc(e.vi) : '') + ' & ' + (e ? esc(e.en) : '') + ' \\\\';
@@ -201,6 +201,7 @@ var SA_TEX = (function () {
       rows + '\n\\end{longtable}\n' +
       '{\\small Ô trống: không tra thấy trong từ điển 800 từ – tự tra thêm rồi điền. ' +
       'Dạng mơ hồ (khớp nhiều từ khác nhau sau khi bỏ dấu thanh) cố ý để trống. ' +
+      '"(bóc đuôi)" = đoán ngược về từ điển (bóc đuôi biến cách/chia + lược augment ἐ-): nghĩa đúng nhưng dạng gốc chỉ là gợi ý, hãy kiểm chứng. ' +
       'Cột "Dạng (gợi ý)": đoán theo bảng đuôi L1–10; dấu "?" = kiểm chứng.}\n';
   }
 

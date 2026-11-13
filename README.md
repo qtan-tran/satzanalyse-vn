@@ -12,7 +12,7 @@ This repository is developed and maintained by **Quoc-Tan Tran**, **Postdoctoral
 ## Luồng sử dụng
 
 1. Dán văn bản Hy Lạp (tối đa **1.500 ký tự** ≈ 15–20 câu mỗi lần) vào ô văn bản.
-2. Tool tách câu, tách khối từ, tra **từ điển 800 từ thông dụng nhất** (danh sách từ theo giáo trình Kantharos Neu/Omega; gloss tiếng Việt–English tự biên soạn), đoán **hình thái theo bảng đuôi L1–10** (dạng đóng như mạo từ là chắc chắn; còn lại là gợi ý kèm "?") và sinh **khung phân tích**: mỗi câu một khung gồm sơ đồ khối từ ba tầng (nghĩa ngắn và gợi ý dạng hiện dưới mỗi từ), bảng "Dịch theo cụm (cách nối nghĩa)", bảng động từ, 7 bước phân tích, bản dịch; cuối là PHẦN 2 từ vựng (theo thứ tự xuất hiện, không lặp; cột từ điển/từ loại/nghĩa/dạng gợi ý điền sẵn khi tra thấy), pattern và bảng đuôi tự động.
+2. Tool tách câu, tách khối từ, tra **từ điển 800 từ thông dụng nhất** (danh sách từ theo giáo trình Kantharos Neu/Omega; gloss tiếng Việt–English tự biên soạn; không tra thấy trực tiếp thì **bóc đuôi về lemma**: bóc đuôi biến cách/chia + lược augment ἐ-, ghi nhãn "(bóc đuôi)" để kiểm chứng), đoán **hình thái theo bảng đuôi L1–10** (dạng đóng như mạo từ là chắc chắn; tiểu từ/giới từ ghi "bất biến"; so sánh hơn/nhất -τερος/-τατος có nhận diện; còn lại là gợi ý kèm "?") và sinh **khung phân tích**: mỗi câu một khung gồm sơ đồ khối từ ba tầng (nghĩa ngắn và gợi ý dạng hiện dưới mỗi từ), bảng "Dịch theo cụm (cách nối nghĩa)", bảng động từ, 7 bước phân tích, bản dịch; cuối là PHẦN 2 từ vựng (theo thứ tự xuất hiện, không lặp; cột từ điển/từ loại/nghĩa/dạng gợi ý điền sẵn khi tra thấy), pattern và bảng đuôi tự động.
 3. Tải hai file: `satzanalyse.html` (mở và điền bằng bất kỳ trình soạn thảo nào, in ra PDF qua trình duyệt) và `satzanalyse.tex` (biên dịch qua Overleaf/XeLaTeX – xem trang **Hướng dẫn**).
 4. Phần để trống là **chủ đích của phương pháp**: tool không bịa phân tích; dạng không tra thấy trong từ điển (hoặc mơ hồ giữa nhiều từ) để trống cho bạn tự tra và tự điền chức năng câu, dạng hình thái, bản dịch.
 
@@ -39,7 +39,7 @@ docs/                 ARCHITECTURE · ROADMAP · COPYRIGHT · FORMAT-SPEC · STY
 
 ## Lộ trình
 
-Xem `docs/ROADMAP.md`: Phần 1 khung + tool MVP ✅ → Phần 2 từ điển Hy Lạp–Việt (800 từ theo Kantharos Neu/Omega) ✅ → Phần 3 gợi ý hình thái (đuôi biến cách/chia) ✅ commit `8b4912a` → Phần 4 corpus mẫu từ readings bài 1–10 graecum-vn ✅ commit `111d222` → Phần 5 trau chuốt UI + cross-link hai chiều ✅ commit `b52bdd1`.
+Xem `docs/ROADMAP.md`: Phần 1 khung + tool MVP ✅ → Phần 2 từ điển Hy Lạp–Việt (800 từ theo Kantharos Neu/Omega) ✅ → Phần 3 gợi ý hình thái (đuôi biến cách/chia) ✅ commit `8b4912a` → Phần 4 corpus mẫu từ readings bài 1–10 graecum-vn ✅ commit `111d222` → Phần 5 trau chuốt UI + cross-link hai chiều ✅ commit `b52bdd1` → Phần 6 bóc đuôi về lemma (đã dựng chờ duyệt).
 
 ## License
 

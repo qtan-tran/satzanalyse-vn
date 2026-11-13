@@ -90,6 +90,7 @@ var SA = (function () {
    * engine.js). Engine vẫn chạy đầy đủ khi không có từ điển; dictLookup
    * chỉ trả về entry khi tra chắc chắn. */
   var IDX0 = null, IDX1 = null, IDX2 = null, LOOKUP_CACHE = Object.create(null);
+  var ENTRIES = null, STEM_N = null, STEM_V = null;
   var AMB = { ambiguous: true };
   var GREEK_RUN = /[\u0370-\u03FF\u1F00-\u1FFF\u2019\u02BC']+/g;
   var APOS_TAIL = /[\u2019\u02BC']+$/;
@@ -156,12 +157,14 @@ var SA = (function () {
 
   function buildDictIndex() {
     IDX0 = Object.create(null); IDX1 = Object.create(null); IDX2 = Object.create(null);
+    ENTRIES = [];
     var lines = window.SA_DICT.tsv.split('\n'), i, j, c, e, parts, claims, w;
     for (i = 0; i < lines.length; i++) {
       if (!lines[i].trim()) continue;
       c = lines[i].split('\t');
       if (c.length < 5) continue;
       e = { lemma: c[0], forms: c[1], pos: c[2], vi: c[3], en: c[4] };
+      ENTRIES.push(e);
       claims = [];
       if (e.lemma.indexOf('/') >= 0) {
         /* lemma có " / ": mỗi phần một từ là chính tả thay thế (σεαυτοῦ / σαυτοῦ);
@@ -206,8 +209,161 @@ var SA = (function () {
       if (k2.length >= 2) hit = IDX2[k2];
     }
     var e = (hit && hit !== AMB) ? hit.e : null;
+    if (!e) e = dictTier3(token); /* Phần 6: bóc đuôi/augment tra ngược về lemma */
     LOOKUP_CACHE[token] = e;
     return e;
+  }
+
+  /* ---- Bóc đuôi về lemma (Phần 6) ----------------------------------------
+   * Khi cả 3 tầng khoá đều không tra thấy: bóc phần đuôi biến cách/chia (và
+   * augment ἐ- của động từ quá khứ) rồi tra NGƯỢC về thân đã dựng sẵn từ
+   * lemma trong từ điển: danh từ/tính từ ch 1/2 (-ος/-ον/-η/-α), động từ
+   * -ω/-ομαι (kèm biến thể co ε → rụt ε, ε/α → η của thân sigmatic). Kết quả
+   * đúng 1 lemma → trả entry kèm nhãn derived (bảng từ vựng ghi "(bóc đuôi)");
+   * thân khớp nhiều lemma khác nhau → mơ hồ → null, giữ nguyên tắc không bịa.
+   * Giới hạn (ghi docs/FORMAT-SPEC §5): không phủ ch 3, phân từ, hoàn thành,
+   * temporal augment (ἦλθον), động từ co α (τιμᾷ), thân lỏng, động từ -μι,
+   * kép đôi, bổ sung (ἔλαβον ≠ λαμβάνω). */
+  var SN_ENDS = ['αις', 'οις', 'ους', 'ων', 'αι', 'οι', 'ας', 'αν', 'ην', 'ου', 'ω', 'ον', 'η', 'α', 'ε', 'ος'];
+  var SV_ENDS = ['ουσιν', 'ουσι', 'ουμεν', 'ομεν', 'ονται', 'οντο', 'ομεθα', 'ομην', 'εται', 'ετο', 'εσθε', 'ομαι', 'ειν', 'ουν', 'ετε', 'εις', 'ει', 'ον', 'ες', 'ε', 'ναι', 'σθαι'];
+  var SS_ENDS = ['σουσιν', 'σουσι', 'σουμεν', 'σαμεν', 'σατε', 'σαν', 'σας', 'σε', 'σεν', 'σων', 'σω', 'σεις', 'σει', 'σετε', 'σομεν', 'σαι', 'σαμην', 'σατο', 'σαντο'];
+  var ST_ENDS = ['θησαν', 'θημεν', 'θητε', 'θηναι', 'θης', 'θην', 'θη'];
+  /* Chuẩn hoá mọi sigma về medial σ: key2 không đổi ς, mà đuôi bóc ra
+   * phải so sánh nhất quán với thân từ lemma. */
+  function bk(s) {
+    return key2(s).replace(/ς/g, 'σ');
+  }
+  (function () {
+    var a = [SN_ENDS, SV_ENDS, SS_ENDS, ST_ENDS], i, j;
+    for (i = 0; i < a.length; i++) {
+      for (j = 0; j < a[i].length; j++) a[i][j] = a[i][j].replace(/ς/g, 'σ');
+    }
+  }());
+
+  function endsWith(s, t) {
+    return s.length >= t.length && s.slice(-t.length) === t;
+  }
+
+  function firstGreekRun(s) {
+    var m = String(s).match(GREEK_RUN);
+    return m ? m[0] : null;
+  }
+
+  /* Thân khớp 2 lemma khác nhau → AMB (mơ hồ, không tự điền). */
+  function addStemKey(idx, k, e) {
+    if (!k || k.length < 2) return;
+    var cur = idx[k];
+    if (cur === undefined) { idx[k] = { e: e }; return; }
+    if (cur === AMB) return;
+    if (cur.e === e || cur.e.lemma === e.lemma) return;
+    idx[k] = AMB;
+  }
+
+  function buildStemIndex() {
+    STEM_N = Object.create(null); STEM_V = Object.create(null);
+    var i, e, w, bare, stem, last;
+    for (i = 0; i < ENTRIES.length; i++) {
+      e = ENTRIES[i];
+      w = firstGreekRun(e.lemma);
+      if (!w) continue;
+      bare = bk(w);
+      if (posIsNounLike(e.pos)) {
+        stem = null;
+        if (endsWith(bare, 'οσ') || endsWith(bare, 'ον') || endsWith(bare, 'η')) {
+          stem = bare.slice(0, -2);
+        } else if (endsWith(bare, 'α')) {
+          stem = bare.slice(0, -1);
+        }
+        if (stem) addStemKey(STEM_N, stem, e);
+      } else if (e.pos.indexOf('động từ') === 0) {
+        if (endsWith(bare, 'ω')) {
+          stem = bare.slice(0, -1);
+          addStemKey(STEM_V, stem, e);
+          last = stem.charAt(stem.length - 1);
+          if (last === 'ε') {
+            addStemKey(STEM_V, stem.slice(0, -1), e);
+            addStemKey(STEM_V, stem.slice(0, -1) + 'η', e);
+          } else if (last === 'α') {
+            addStemKey(STEM_V, stem.slice(0, -1) + 'η', e);
+          }
+        } else if (endsWith(bare, 'ομαι')) {
+          stem = bare.slice(0, -4);
+          addStemKey(STEM_V, stem, e);
+        }
+      }
+    }
+  }
+
+  function pushStemHits(out, hits) {
+    var i, j, seen;
+    for (i = 0; i < hits.length; i++) {
+      seen = false;
+      for (j = 0; j < out.length; j++) {
+        if (out[j].lemma === hits[i].lemma) { seen = true; break; }
+      }
+      if (!seen) out.push(hits[i]);
+    }
+  }
+
+  function stemHit(idx, cands) {
+    var i, hit, out = [];
+    for (i = 0; i < cands.length; i++) {
+      hit = idx[cands[i]];
+      if (hit && hit !== AMB) out.push(hit.e);
+    }
+    return out;
+  }
+
+  /* Thử bóc một chuỗi (đã bỏ dấu, có thể đã lược augment) theo mọi họ đuôi. */
+  function tier3Collect(s, out) {
+    var i, j, v, base, stripped, cands;
+    for (i = 0; i < SN_ENDS.length; i++) {
+      v = SN_ENDS[i];
+      if (s.length >= v.length + 2 && endsWith(s, v)) {
+        pushStemHits(out, stemHit(STEM_N, [s.slice(0, -v.length)]));
+      }
+    }
+    for (i = 0; i < SV_ENDS.length; i++) {
+      v = SV_ENDS[i];
+      if (s.length >= v.length + 2 && endsWith(s, v)) {
+        pushStemHits(out, stemHit(STEM_V, [s.slice(0, -v.length)]));
+      }
+    }
+    for (i = 0; i < ST_ENDS.length; i++) {
+      v = ST_ENDS[i];
+      if (s.length >= v.length + 2 && endsWith(s, v)) {
+        pushStemHits(out, stemHit(STEM_V, [s.slice(0, -v.length)]));
+      }
+    }
+    /* Sigmatic: σ = nha (τ/δ/θ) rụt trước σ hoặc thân nguyên âm; ψ = môi
+     * π/β/φ + σ; ξ = ngắc mềm κ/γ/χ + σ. Bóc xong dựng lại phụ âm gốc. */
+    for (i = 0; i < SS_ENDS.length; i++) {
+      base = SS_ENDS[i];
+      for (j = 0; j < 3; j++) {
+        v = (j === 0) ? base : (j === 1 ? '\u03c8' + base.slice(1) : '\u03be' + base.slice(1));
+        if (s.length >= v.length + 2 && endsWith(s, v)) {
+          stripped = s.slice(0, -v.length);
+          if (j === 0) cands = [stripped, stripped + '\u03c4', stripped + '\u03b4', stripped + '\u03b8'];
+          else if (j === 1) cands = [stripped + '\u03c6', stripped + '\u03c0', stripped + '\u03b2'];
+          else cands = [stripped + '\u03ba', stripped + '\u03b3', stripped + '\u03c7'];
+          pushStemHits(out, stemHit(STEM_V, cands));
+        }
+      }
+    }
+  }
+
+  function dictTier3(token) {
+    if (!window.SA_DICT || !window.SA_DICT.tsv) return null;
+    if (!ENTRIES) return null;
+    if (!STEM_N) buildStemIndex();
+    var bare = bk(token);
+    if (bare.length < 5) return null;
+    var out = [];
+    tier3Collect(bare, out);
+    if (bare.charAt(0) === 'ε') tier3Collect(bare.slice(1), out); /* augment ἐ- */
+    if (out.length !== 1) return null; /* 0 = không khớp; > 1 = mơ hồ → không bịa */
+    var e = out[0];
+    return { lemma: e.lemma, forms: e.forms, pos: e.pos, vi: e.vi, en: e.en, derived: true };
   }
 
   /* ---- Gợi ý hình thái (Phần 3, data/morph.js) ---------------------------
@@ -291,9 +447,17 @@ var SA = (function () {
     if (ex) return { cat: ex[0], a: ex[1], e: null, conf: 2 };
     var pos = entry ? entry.pos : '';
     var posN = posIsNounLike(pos), posV = pos.indexOf('động từ') >= 0;
-    /* Từ loại tra được nhưng không thuộc bảng nào (tiểu từ, trạng từ, liên
-     * từ, giới từ...) → không đoán hình thái. */
-    if (entry && !posN && !posV) return null;
+    /* Từ không biến cách (tiểu từ, liên từ, giới từ, trạng từ): đây là sự
+     * thật ngữ pháp, ghi thẳng 'bất biến' (conf 2, không dấu ?) thay vì
+     * '(dạng?)'. Riêng mạo từ/công thức dẫn thoại tuy pos ngoài bảng nhưng
+     * có thể biến cách (ἦ) → giữ null, không bịa. */
+    if (entry && !posN && !posV) {
+      if (pos === 'tiểu từ' || pos === 'liên từ' ||
+          pos === 'giới từ' || pos === 'trạng từ') {
+        return { cat: 'bất biến', a: 'bất biến', e: null, conf: 2 };
+      }
+      return null;
+    }
     var bare = key2(token);
     if (bare.length < 3) return null;
     var bi = lastBaseIota(token.toLowerCase().normalize('NFD').replace(APOS_TAIL, ''));

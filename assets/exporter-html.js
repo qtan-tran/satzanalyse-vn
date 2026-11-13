@@ -210,7 +210,7 @@ var SA_HTML = (function () {
       var formTx = tf && tf.form[t] !== undefined ? esc(tf.form[t]) : formText(m);
       var viTx = e ? esc(e.vi) : (tf && tf.gl[t] !== undefined ? esc(tf.gl[t]) : '');
       return '<tr><td class="gk">' + esc(t) + '</td><td>' +
-        (e ? esc(e.lemma) : '') + '</td><td>' + (e ? esc(e.pos) : '') +
+        (e ? esc(e.lemma) + (e.derived ? ' (bóc đuôi)' : '') : '') + '</td><td>' + (e ? esc(e.pos) : '') +
         '</td><td>' + formTx +
         '</td><td>' + viTx + '</td><td>' + (e ? esc(e.en) : '') +
         '</td><td class="star">' + (e ? '★' : '') + '</td></tr>';
@@ -220,6 +220,7 @@ var SA_HTML = (function () {
       '<th>Dạng (gợi ý)</th><th>Tiếng Việt</th><th>English</th><th>★</th></tr>' + rows + '</table>' +
       '<p class="note">★ = tra thấy trong từ điển 800 từ (danh sách từ theo Kantharos/Omega). ' +
       'Dòng trống = không tra thấy: bạn tự tra thêm rồi điền. ' +
+      '"(bóc đuôi)" = đoán ngược về từ điển (bóc đuôi biến cách/chia + lược augment ἐ-): nghĩa đúng nhưng dạng gốc chỉ là gợi ý, hãy kiểm chứng. ' +
       'Dạng mơ hồ (khớp nhiều từ khác nhau sau khi bỏ dấu thanh) được cố ý để trống. ' +
       'Cột "Dạng (gợi ý)": đoán theo bảng đuôi L1–10; dấu "?" = hãy kiểm chứng.</p>';
   }
@@ -268,7 +269,7 @@ var SA_HTML = (function () {
     return '<table><tr><th>Đuôi</th><th>Nhận biết dạng</th><th>Ví dụ trong văn bản</th></tr>' +
       rows + tail + '</table>' +
       '<p class="note">Bảng tự động theo bảng đuôi L1–10: mọi dòng đều là gợi ý – hãy kiểm chứng. ' +
-      'Dạng đóng (mạo từ, đại từ quen thuộc, εἰμί) không có đuôi nên không nằm ở đây.</p>';
+      'Dạng đóng (mạo từ, đại từ quen thuộc, εἰμί) và từ bất biến không có đuôi nên không nằm ở đây.</p>';
   }
 
   /* build(model, fill): fill tuỳ chọn của corpus mẫu (Phần 4, FORMAT-SPEC §9):
@@ -325,7 +326,7 @@ var SA_HTML = (function () {
       'Từ vựng: gloss tiếng Việt ngay dưới mỗi từ (nếu có) và bảng PHẦN 2 được điền sẵn khi tra thấy trong từ điển 800 từ; ' +
       'không tra thấy thì để trống cho bạn tự điền.<br>' +
       'Gợi ý hình thái: ô dạng kết thúc "?" là đoán theo đuôi – kiểm chứng rồi mới dùng; ' +
-      'điểm dễ nhầm thì 2 khả năng (tách " / "), khả năng cao nhất đứng đầu; "(dạng?)" = chưa đoán được. ' +
+      'điểm dễ nhầm thì 2 khả năng (tách " / "), khả năng cao nhất đứng đầu; "(dạng?)" = chưa đoán được; "bất biến" = tiểu từ/liên từ/giới từ/trạng từ không biến cách (chắc chắn, không kèm ?). ' +
       'Viết tắt: Sg./Pl. = số ít/số nhiều; m./f./n. = đực/cái/trung; Nom./Gen./Dat./Acc. = chủ/sở hữu/tặng/đối cách; ' +
       'ch 1/2/3 = biến cách thứ nhất/hai/ba; TD/BN = thể trung/bị động.<br>' +
       'Sperrstellung (hyphenated attribute position): sở hữu cách xen giữa mạo từ và danh từ ' +

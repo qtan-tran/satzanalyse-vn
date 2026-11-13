@@ -6,12 +6,17 @@
  *    (hiện tại / quá khứ / aorist / tương lai, chủ động + thể trung/bị động,
  *    nguyên mẫu). Mọi kết quả theo đuôi chỉ là GỢI Ý – engine gắn dấu "?"
  *    cho người học kiểm chứng; đuôi mơ hồ chỉ ghi tối đa 2 khả năng,
- *    khả năng cao nhất đứng đầu (quy ước chốt: không rối não người học). Chưa phủ: mệnh lệnh, phân từ, hoàn thành, kép đôi,
- *    giả định/cách giả định (sẽ mở rộng dần theo lộ trình).
+ *    khả năng cao nhất đứng đầu (quy ước chốt: không rối não người học).
+ *  - Phần 6 thêm: đuôi so sánh hơn (-τερος/-τέρα/-τερον) và so sánh
+ *    nhất (-τατος/-τάτη/-τατον) biến cách theo khuôn ch 1/2; tiểu từ,
+ *    liên từ, giới từ, trạng từ ghi 'bất biến' (không biến cách).
+ *  - Chưa phủ: mệnh lệnh, phân từ, hoàn thành, kép đôi, giả định/cách giả
+ *    định, so sánh hơn/nhất bất quy tắc (-ίων của βελτίων, -ιστος của
+ *    μέγιστος/πλεῖστος), sẽ mở rộng dần theo lộ trình.
  * Tra đuôi trên chuỗi đã bỏ mọi dấu thanh + iota dưới, cột đuôi ghi không dấu.
  * Bảng tự biên soạn: nội dung CC BY-SA 4.0 · code MIT. ES5. */
 window.SA_MORPH = {
-  version: 1,
+  version: 2,
 
   /* Key = key0(token): NFC, chữ thường, bỏ apostrophe elision cuối từ.
    * Giá trị: [loại từ, phân tích]. Biến thể dấu nặng/nhány (grave/acute)
@@ -171,7 +176,43 @@ window.SA_MORPH = {
     ['ου', 'Gen. Sg. m./n. (ch 2)'],
     ['ος', 'Nom. Sg. m. (ch 2) / Gen. Sg. (ch 3, -τος/-ματος)'],
     ['ι', 'Dat. Sg. (ch 3)'],
-    ['ως', 'Gen. Sg. (ch 3, -ις/-ευς)']
+    ['ως', 'Gen. Sg. (ch 3, -ις/-ευς)'],
+    /* So sánh hơn (đuôi -τερος/-τέρα/-τερον, Phần 6): âm chủ đề thay đổi
+     * theo gốc (σοφώτερος, ταχύτερος, ἀληθέστερος) nên key là -τερ- trần;
+     * Dat. Sg. -τερῳ/-τέρᾳ rơi vào nhánh iota dưới của engine. πατέρα,
+     * θυγάτερα, πατέρων, θυγατέρων (họ πατήρ/θυγάτηρ) trùng đuôi -> ghi
+     * 2 khả năng, không khẳng định một. Họ ἕτερος (ἑτέρα, θάτερον...)
+     * biến cách y hệt khuôn -τερ-: đọc cách/giống/số vẫn đúng, nhãn
+     * 'so sánh' có thể lệch -> mọi dòng đều conf 1 kèm '?'. */
+    ['τεραις', 'Dat. Pl. f. so sánh hơn (kiểu ch 1)'],
+    ['τεραι', 'Nom. Pl. f. so sánh hơn (kiểu ch 1)'],
+    ['τεροις', 'Dat. Pl. m./n. so sánh hơn (kiểu ch 2)'],
+    ['τερους', 'Acc. Pl. m. so sánh hơn (kiểu ch 2)'],
+    ['τεροι', 'Nom. Pl. m. so sánh hơn (kiểu ch 2)'],
+    ['τερων', 'Gen. Pl. so sánh hơn / Gen. Pl. (πατήρ, θυγάτηρ)'],
+    ['τερας', 'Gen. Sg. f. / Acc. Pl. f. so sánh hơn (kiểu ch 1)'],
+    ['τεραν', 'Acc. Sg. f. so sánh hơn (kiểu ch 1)'],
+    ['τερα', 'Nom. Sg. f. so sánh hơn (kiểu ch 1) / Acc. Sg. (πατήρ, θυγάτηρ)'],
+    ['τερου', 'Gen. Sg. m./n. so sánh hơn (kiểu ch 2)'],
+    ['τερον', 'Nom./Acc. Sg. n. / Acc. Sg. m. so sánh hơn (kiểu ch 2)'],
+    ['τερος', 'Nom. Sg. m. so sánh hơn (kiểu ch 2)'],
+    /* So sánh nhất (đuôi -τατος/-τάτη/-τατον, Phần 6): phủ cả biến thể
+     * -ότατος (ἀκρότατος) vì key là -τατ- trần; bất quy tắc -ιστος
+     * (μέγιστος, ἐλάχιστος, πλεῖστος) chưa phủ. */
+    ['ταταις', 'Dat. Pl. f. so sánh nhất (kiểu ch 1)'],
+    ['ταται', 'Nom. Pl. f. so sánh nhất (kiểu ch 1)'],
+    ['τατοις', 'Dat. Pl. m./n. so sánh nhất (kiểu ch 2)'],
+    ['τατους', 'Acc. Pl. m. so sánh nhất (kiểu ch 2)'],
+    ['τατοι', 'Nom. Pl. m. so sánh nhất (kiểu ch 2)'],
+    ['τατων', 'Gen. Pl. so sánh nhất'],
+    ['τατας', 'Acc. Pl. f. so sánh nhất (kiểu ch 1)'],
+    ['τατης', 'Gen. Sg. f. so sánh nhất (kiểu ch 1)'],
+    ['τατην', 'Acc. Sg. f. so sánh nhất (kiểu ch 1)'],
+    ['τατη', 'Nom. Sg. f. so sánh nhất (kiểu ch 1)'],
+    ['τατα', 'Nom./Acc. Pl. n. so sánh nhất (kiểu ch 2)'],
+    ['τατου', 'Gen. Sg. m./n. so sánh nhất (kiểu ch 2)'],
+    ['τατον', 'Nom./Acc. Sg. n. / Acc. Sg. m. so sánh nhất (kiểu ch 2)'],
+    ['τατος', 'Nom. Sg. m. so sánh nhất (kiểu ch 2)']
   ],
 
   /* Đuôi động từ (chuỗi không dấu, dài → ngắn). TD/BN = thể trung/bị động. */

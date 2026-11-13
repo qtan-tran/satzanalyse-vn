@@ -8,7 +8,7 @@
 - Tách Satz: cắt sau `. · ; !` và xuống dòng, chỉ khi ký tự kế tiếp là khoảng trắng hoặc kết thúc text.
 - Token (khối từ ứng viên): chuỗi ký tự Hy Lạp (`U+0370–U+03FF`, `U+1F00–U+1FFF`) + apostrophe elision (`’ U+2019`, `ʼ U+02BC`, `' ASCII`), bỏ dấu câu ở rìa; token phải chứa ít nhất một ký tự Hy Lạp.
 - Model: `{ title, subtitle, chars, sentences: [{n, greek, tokens[]}], vocab: [token unique theo thứ tự xuất hiện] }`.
-- **Không hỏi trọng tâm ngữ pháp**: người dùng mặc định là người mới học Ancient Greek – mọi điểm ngữ pháp đều quan trọng; UI chỉ hỏi tiêu đề (tuỳ chọn). Trường `subtitle` trong model không có ô nhập ở UI, chỉ dành cho corpus mẫu (Phần 4) khi biên soạn có chủ đích.
+- **Không hỏi trọng tâm ngữ pháp**: người dùng mặc định là người mới học Ancient Greek – mọi điểm ngữ pháp đều quan trọng. UI không còn ô nhập nào ngoài văn bản gốc (ô "Tiêu đề (tuỳ chọn)" bỏ từ Phần 6 theo góp ý người sở hữu); trường `title`/`subtitle` trong model không có ô nhập ở UI, chỉ dành cho corpus mẫu (Phần 4) khi biên soạn có chủ đích; file tải mặc định tên `satzanalyse`.
 
 ## 1. Nhãn chức năng câu (14, key khớp macro LaTeX)
 
@@ -87,7 +87,7 @@ Màu chuẩn (dùng chung cả hai định dạng + UI tool): Prad `#1F5FBF`, Su
 6. Phủ định (οὐ/οὐκ/οὐχ, μή) → nhắm vào đâu?
 7. Dịch: bản sát nghĩa (wörtlich) → bản tự nhiên (natürlich).
 
-## 5. Từ điển tích hợp (v1.1, Phần 2)
+## 5. Từ điển tích hợp (v1.4, Phần 2 + Phần 6)
 
 **Data file**: `data/dict.js` gán `window.SA_DICT = { version, source, cols, tsv }`; nạp qua `<script src="data/dict.js">` đặt **trước** `assets/engine.js`. TSV nhúng trong template literal, **không fetch** (CORS file://). Engine chạy đầy đủ khi thiếu file này; API `SA.dictLookup(token)` trả entry hoặc `null`.
 
@@ -108,6 +108,10 @@ Màu chuẩn (dùng chung cả hai định dạng + UI tool): Prad `#1F5FBF`, Su
 2. **tier 1** – bỏ dấu hút (smooth/rough), giữ dấu thanh + iota dưới; chỉ dùng khi tier 0 không có key.
 3. **tier 2** – bỏ mọi dấu thanh (biến thể dấu giữa các bản in, ví dụ τὸν/τόν); chỉ dùng khi key còn ≥ 2 ký tự cơ bản (từ 1 âm tiết như ἦ/ἡ phân biệt bằng dấu hút – bỏ dấu sẽ bịa).
 
+**Tier 3 – bóc đuôi về lemma (Phần 6)**: chạy khi cả 3 tầng khoá đều không ra. Token (đã bỏ dấu, chuẩn hoá mọi sigma về σ) ≥ 5 ký tự được bóc phần đuôi biến cách/chia rồi tra NGƯỢC về index thân dựng sẵn từ lemma (danh từ/tính từ ch 1/2 -ος/-ον/-η/-α → thân; động từ -ω/-ομαι → thân, kèm biến thể co ε → rụt ε / ε+η, α → η cho thân sigmatic). Thử CẢ với lẫn không lược augment ἐ- đầu từ (ἐλέγον khớp "λεγ" có lược; ἐλαύνει khớp "ελαυν" không lược). Họ đuôi: danh từ 16 đuôi; động từ thường 22 đuôi; sigmatic σ/ψ/ξ (nha rụt dựng lại τ/δ/θ; môi π/β/φ; ngắc κ/γ/χ); thê -θη. Kết quả **đúng 1 lemma** → trả entry kèm nhãn `derived: true` (xuất ghi "(bóc đuôi)" cạnh lemma, nghĩa đúng nhưng dạng gốc chỉ là gợi ý); 0 hoặc > 1 → `null`. Thân khớp 2 lemma khác nhau → index ghi mơ hồ → không tự điền.
+
+**Giới hạn tier 3 (chủ đích, không phải lỗi)**: không phủ danh từ ch 3, phân từ, hoàn thành, temporal augment (ἦλθον), động từ co α (τιμᾷ), thân lỏng, động từ -μι, kép đôi, bổ sung thân (ἔλαβον ≠ λαμβάνω); từ ngoài danh sách 800 (ví dụ ὄχλος) vẫn tra `null`. Dạng đóng τίνες/τίνας và τινές/τινάς được thêm vào cột keys (tier 0) nên không cần bóc. Lợi ích phụ: entry tier 3 có từ loại động từ → `morphLookup` chọn đúng bảng đuôi động từ (ἐλέγον không còn bị đoán thành danh từ).
+
 **Mức claim khi dựng index** (xung đột key: mức cao thắng, bằng cấp → **mơ hồ** → tra ra `null`):
 
 3. lemma nguyên văn → 2. keys biên tập / chính tả thay thế → 1. mảnh một từ trong forms → 0. **weak**: mảnh rút từ cụm nhiều từ (như công thức `ἦ δ' ὅς` rút ra `ἦ`) – luôn nhường cho claim mạnh hơn.
@@ -118,21 +122,21 @@ Cùng lemma gặp ở nhiều mục nghĩa (ἄρα, ἤ) → **gộp gloss** b�
 
 **Nguồn danh sách từ**: 800 từ thông dụng nhất theo giáo trình Kantharos Neu (Omega – Ulrich Gebhardt, CC BY-NC-SA 4.0; xem `docs/COPYRIGHT.md`). Gloss tiếng Việt/English tự biên soạn cho Satzanalyse VN.
 
-## 6. Gợi ý hình thái (v1.2, Phần 3)
+## 6. Gợi ý hình thái (v1.2 Phần 3 + Phần 6: bất biến + so sánh, morph v2)
 
 **Data file**: `data/morph.js` gán `window.SA_MORPH = { version, exact, noun, verb }`; nạp qua `<script src="data/morph.js">` **sau** `data/dict.js`, **trước** `assets/engine.js`. Engine chạy đầy đủ khi thiếu file; API `SA.morphLookup(token, entry)` trả `{ cat, a, e, conf }` hoặc `null` (entry = kết quả `dictLookup`, tuỳ chọn).
 
 **exact – dạng đóng (conf 2)**: mạo từ đủ 17 dạng, đại từ quan hệ, εἰμί (hiện tại/quá khứ/tương lai, đủ biến thể grave/acute), αὐτός, đại từ ngôi (ἐγώ/σύ/ἡμεῖς/ὑμεῖς + các cách), οὗτος, đại từ nghi vấn. Tra bằng key0 + hai biến thể grave↔acute của dấu ở âm cuối (hình thức biến thiên theo vị trí: τὸν/τόν, ἐστὶν/ἐστίν). Nhận dạng đóng → ghi thẳng, **không** dấu "?".
 
-**Bảng đuôi (conf 1)**: `noun` – đuôi danh từ/tính từ/đại từ, ch 1/2/3 (đuôi mơ hồ ghi **tối đa 2 khả năng** tách " / ", khả năng cao nhất đứng đầu – quy ước chốt để không rối não người học; ví dụ -ας = Gen. Sg. f. / Acc. Pl. f.); `verb` – hiện tại/quá khứ/aorist/tương lai, chủ động + TD/BN, nguyên mẫu, gồm biến thể ν di động (σεν, ουσιν, σιν, εν). Khớp đuôi dài → ngắn trên chuỗi đã bỏ mọi dấu thanh + iota dưới; gốc phải còn ≥ 2 ký tự cơ bản. Mọi kết quả theo đuôi **là gợi ý**, xuất kèm "?".
+**Bảng đuôi (conf 1)**: `noun` – đuôi danh từ/tính từ/đại từ, ch 1/2/3 + đuôi so sánh hơn -τερ-/-τέρα/-τερον và so sánh nhất -τατ-/-τάτη/-τατον (Phần 6: âm chủ đề thay đổi theo gốc – σοφώτερος, ταχύτερος, ἀληθέστερος, σοφώτατος, ἀκρότατος – nên key là -τερ-/-τατ- trần; πατέρα/πατέρων/θυγάτερα trùng đuôi → ghi 2 khả năng; họ ἕτερος biến cách y hệt khuôn -τερ- nên nhãn so sánh có thể lệch, mọi dòng vẫn conf 1 kèm "?") (đuôi mơ hồ ghi **tối đa 2 khả năng** tách " / ", khả năng cao nhất đứng đầu – quy ước chốt để không rối não người học; ví dụ -ας = Gen. Sg. f. / Acc. Pl. f.); `verb` – hiện tại/quá khứ/aorist/tương lai, chủ động + TD/BN, nguyên mẫu, gồm biến thể ν di động (σεν, ουσιν, σιν, εν). Khớp đuôi dài → ngắn trên chuỗi đã bỏ mọi dấu thanh + iota dưới; gốc phải còn ≥ 2 ký tự cơ bản. Mọi kết quả theo đuôi **là gợi ý**, xuất kèm "?".
 
-**Gate theo từ loại** (dùng entry): pos chứa danh từ/tính từ/đại từ/số từ → bảng noun; chứa động từ → bảng verb; tiểu từ/trạng từ/liên từ/giới từ/mạo từ/công thức dẫn thoại → `null` (không đoán). Không có entry (không tra thấy) → thử bảng noun trước (danh từ gặp nhiều hơn), không khớp mới thử bảng verb; mọi kết quả **tối đa 2 khả năng**, khả năng cao nhất đứng đầu – không gộp dàn trải làm rối người học.
+**Gate theo từ loại** (dùng entry): pos chứa danh từ/tính từ/đại từ/số từ → bảng noun; chứa động từ → bảng verb; tiểu từ/liên từ/giới từ/trạng từ → **`bất biến`** (conf 2, không kèm "?": không biến cách là sự thật ngữ pháp, không phải đoán – Phần 6); mạo từ/công thức dẫn thoại có thể biến cách (ἦ) → `null` (không đoán). Không có entry (không tra thấy) → thử bảng noun trước (danh từ gặp nhiều hơn), không khớp mới thử bảng verb; mọi kết quả **tối đa 2 khả năng**, khả năng cao nhất đứng đầu – không gộp dàn trải làm rối người học.
 
 **Iota dưới sau nguyên âm cuối (ῃ/ᾳ/ῳ)**: Dat. Sg. (ch 1/2) hoặc 2 Sg. hiện tại TD/BN – cùng hình thức; gate quyết định liệt kê cái nào, không entry thì liệt kê cả hai.
 
 **Xuất**: ô form của `.wb` (HTML), comment `% Gợi ý hình thái` mỗi câu (.tex), cột "Dạng (gợi ý)" của bảng vocab (HTML 7 cột / longtable 6 cột), bảng đuôi PHẦN 2 tự động (khóa = đuôi + phân tích, ví dụ tối đa 3 từ, tối đa 12 dòng). Viết tắt chuẩn: Sg./Pl., m./f./n., Nom./Gen./Dat./Acc., ch 1/2/3, TD/BN – định nghĩa trong Chú giải của cả hai định dạng.
 
-**Phạm vi**: L1–10 (chỉ định hiện tại/quá khứ/aorist/tương lai + nguyên mẫu). Chưa phủ: mệnh lệnh, phân từ, hoàn thành, kép đôi, cách giả định; động từ -μι chỉ nhận diện qua exact/dict, không đoán đuôi.
+**Phạm vi**: L1–10 (chỉ định hiện tại/quá khứ/aorist/tương lai + nguyên mẫu) + so sánh hơn/nhất quy tắc (Phần 6). Chưa phủ: mệnh lệnh, phân từ, hoàn thành, kép đôi, cách giả định, so sánh bất quy tắc (-ίων của βελτίων, -ιστος của μέγιστος/ἐλάχιστος/πλεῖστος); động từ -μι chỉ nhận diện qua exact/dict, không đoán đuôi. Dat. Sg. của so sánh (-οτέρῳ/-οτέρᾳ) rơi vào nhánh iota dưới, nhận nhãn Dat. chung không nhãn so sánh.
 
 ## 7. Kiểm tra tĩnh từ điển & hình thái (chạy cho mọi lần build data)
 
@@ -145,7 +149,8 @@ Cùng lemma gặp ở nhiều mục nghĩa (ἄρα, ἤ) → **gộp gloss** b�
 
 - v1.1 (Phần 2): từ điển tích hợp `data/dict.js` (chi tiết quy tắc ở §5): pre-fill cột Từ điển/Từ loại/Tiếng Việt/English/★ khi tra thấy; gloss ngắn trong Wortblock; không thấy/mơ hồ → để trống.
 - v1.2 (Phần 3): gợi ý hình thái `data/morph.js` (chi tiết ở §6): dạng đóng conf 2 ghi thẳng, đoán theo đuôi conf 1 kèm "?"; cột "Dạng (gợi ý)" trong bảng vocab (HTML 7 cột / longtable 6 cột); bảng đuôi sinh tự động; comment `% Gợi ý hình thái` trong .tex.
-- v1.3 (Phần 4, hiện hành): corpus mẫu `data/corpus.js` + fill API của exporter HTML (chi tiết ở §9): 10 câu mẫu L1–10 biên soạn tay (kèm 3 ô Pattern/câu), gallery `corpus.html`, xuất HTML pre-fill qua `{hint, vi, sentences[], patterns[]}`; .tex fill là lộ trình (chưa làm).
+- v1.3 (Phần 4): corpus mẫu `data/corpus.js` + fill API của exporter HTML (chi tiết ở §9): 10 câu mẫu L1–10 biên soạn tay (kèm 3 ô Pattern/câu), gallery `corpus.html`, xuất HTML pre-fill qua `{hint, vi, sentences[], patterns[]}`; .tex fill là lộ trình (chưa làm).
+- v1.4 (Phần 6, hiện hành): tier 3 bóc đuôi về lemma trong `dictLookup` (chi tiết ở §5): bóc đuôi biến cách/chia + lược augment ἐ-, tra ngược về index thân; đúng 1 lemma → entry `derived: true` + nhãn "(bóc đuôi)" trong xuất HTML/.tex; dạng đóng τίνες/τινάς vào cột keys (dict v3). morph v2: tiểu từ/liên từ/giới từ/trạng từ ghi "bất biến" (conf 2); thêm 27 đuôi so sánh hơn (-τερ-) và so sánh nhất (-τατ-) vào bảng noun (§6).
 
 ## 9. Corpus mẫu L1–10 (v1.3, Phần 4)
 

@@ -4,7 +4,7 @@
  * Code: MIT License. ES5, không dependency. Xem docs/COPYRIGHT.md về nguồn và license.
  */
 window.SA_DICT = {
-  version: 2,
+  version: 3,
   source: 'Danh sách từ theo Omega (Ulrich Gebhardt), Kantharos Neu – CC BY-NC-SA 4.0',
   cols: ["lemma", "forms", "pos", "vi", "en", "keys"],
   tsv: `
@@ -66,7 +66,7 @@ window.SA_DICT = {
 ὅτι	ὅτι	liên từ	rằng; bởi vì	that; because
 οὐ, οὐκ, οὐχ	οὐ, οὐκ, οὐχ	trạng từ	không (phủ định điều có thật)	not
 οὐδέ	οὐδέ	liên từ	và không, cũng không; ngay cả... cũng không	and not, not even
-τίς	τίς, τί	đại từ	ai? cái gì? người/việc nào?	who? what? which?	τίνα τίνι τίνος
+τίς	τίς, τί	đại từ	ai? cái gì? người/việc nào?	who? what? which?	τίνα τίνι τίνος τίνες τίνας
 ὡς	ὡς	liên từ	như, rằng; với tư cách là; khi; để mà	as, that; when
 βασιλεύς	βασιλεύς βασιλέως, ὁ	danh từ	vua	king
 δεινός	δεινός, δεινή, δεινόν	tính từ	ghê gớm, đáng sợ; tài giỏi, xuất sắc	terrible; clever, able
@@ -145,7 +145,7 @@ window.SA_DICT = {
 μόνος	μόνος, μόνη, μόνον	tính từ	duy nhất, chỉ một (οὐ μόνον... ἀλλὰ καὶ: không những... mà còn)	only, alone
 οὔτε...οὔτε	οὔτε...οὔτε	liên từ	không... cũng không	neither... nor
 πράττω	πράττω, πράξω, ἔπραξα, πέπραχα, πέπραγμαι, ἐπράχθην	động từ	làm, hành động (εὖ πράττω: làm tốt, ổn)	do, fare
-τις	τις, τι	đại từ	(ai/cái) nào đó, một (người/việc) nào đó	someone, something; a certain	τινός τινί τινά τι
+τις	τις, τι	đại từ	(ai/cái) nào đó, một (người/việc) nào đó	someone, something; a certain	τινός τινί τινά τι τινές τινάς
 φαῦλος	φαῦλος, φαῦλον	tính từ	tệ, kém cỏi	bad, paltry
 φιλία	φιλία φιλίας, ἡ	danh từ	tình bạn, tình thân	friendship, affection
 ἀποθνήσκω	ἀποθνήσκω, ἀποθανοῦμαι, ἀπέθανον, τέθνηκα	động từ	chết (hoàn thành: đã chết, đã khuất)	die; (perf.) be dead

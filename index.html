@@ -25,14 +25,11 @@
 <h2 class="sec">Nhập văn bản</h2>
 
 <div class="hint">Dán văn bản Hy Lạp (giữ nguyên dấu, tối đa <b>1.500 ký tự</b> ≈ 15–20 câu mỗi lần).
-Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng nhất</b> (danh sách từ theo giáo trình Kantharos/Omega) để điền sẵn nghĩa, đoán <b>hình thái theo đuôi</b> (mạo từ, đại từ quen thuộc và εἰμί là chắc chắn; còn lại là gợi ý kèm dấu ?), rồi sinh <b>khung phân tích để bạn tự điền phần hình thái và chức năng</b> – tool không bịa phân tích.
+Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng nhất</b> (danh sách từ theo giáo trình Kantharos/Omega) để điền sẵn nghĩa (không tra thấy trực tiếp thì <b>đoán ngược về từ điển</b>: bóc đuôi biến cách/chia + lược augment ἐ-, ghi nhãn "(bóc đuôi)" để bạn kiểm chứng), đoán <b>hình thái theo đuôi</b> (mạo từ, đại từ quen thuộc và εἰμί là chắc chắn; tiểu từ/giới từ ghi "bất biến"; còn lại là gợi ý kèm dấu ?), rồi sinh <b>khung phân tích để bạn tự điền phần hình thái và chức năng</b> – tool không bịa phân tích.
 Ô để trống là những chỗ cần bạn phân tích. Xuất PDF thế nào? Xem trang <a href="huong-dan.html">Hướng dẫn</a>. Chưa có câu để thử? Bấm <b>Thử câu mẫu</b> để nạp John 1:1.</div>
 
 <div class="err" id="err"></div>
 <div class="ok" id="ok"></div>
-
-<label for="f-title">Tiêu đề (tuỳ chọn)</label>
-<input type="text" id="f-title" placeholder="Ví dụ: Thư Antigonos gửi Zeno">
 
 <label for="f-text">Văn bản gốc <span class="gk">(ἀρχαῖα ἑλληνικά)</span></label>
 <textarea id="f-text" spellcheck="false" placeholder="Dán văn bản Hy Lạp vào đây…"></textarea>
@@ -62,9 +59,10 @@ Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng n
     <div class="chips" id="chips"></div>
     Mỗi khối từ trong sơ đồ có ba tầng: <b>chức năng câu</b> (trên) – <b>từ</b> (giữa) – <b>dạng hình thái</b> (dưới).
     Ô chức năng để trống (<span class="gk">…</span>) là nơi bạn tự gán sau khi phân tích.
-    Nếu tra thấy trong từ điển 800 từ, nghĩa tiếng Việt ngắn hiện ngay dưới từ và được điền sẵn vào bảng từ vựng.
+    Nếu tra thấy trong từ điển 800 từ, nghĩa tiếng Việt ngắn hiện ngay dưới từ và được điền sẵn vào bảng từ vựng;
+    từ không tra thấy trực tiếp được <b>đoán ngược về từ điển</b> (bóc đuôi biến cách/chia + lược augment ἐ-) và ghi nhãn "(bóc đuôi)" – nghĩa đúng nhưng dạng gốc chỉ là gợi ý, hãy kiểm chứng.
     Ô dạng dưới mỗi từ là gợi ý hình thái theo bảng đuôi L1–10: kết thúc "?" = đoán theo đuôi (kiểm chứng rồi mới dùng);
-    mạo từ, đại từ quen thuộc và εἰμί được nhận chắc chắn (không có dấu hỏi); "(dạng?)" = chưa đoán được.
+    mạo từ, đại từ quen thuộc và εἰμί được nhận chắc chắn (không có dấu hỏi); "bất biến" = tiểu từ/liên từ/giới từ/trạng từ không biến cách (chắc chắn); "(dạng?)" = chưa đoán được.
   </div>
 </div>
 
@@ -84,7 +82,6 @@ Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng n
 (function () {
   'use strict';
   var elText = document.getElementById('f-text');
-  var elTitle = document.getElementById('f-title');
   var elCounter = document.getElementById('counter');
   var elErr = document.getElementById('err');
   var elOk = document.getElementById('ok');
@@ -96,11 +93,9 @@ Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng n
   var lastHTML = '', lastTEX = '', lastName = 'satzanalyse', previewURL = null, tabURL = null;
 
   /* Câu mẫu John 1:1 (trùng corpus L6) để thử ngay lần đầu. */
-  var SAMPLE_TITLE = 'John 1:1';
   var SAMPLE_TEXT = 'ἐν ἀρχῇ ἦν ὁ λόγος, καὶ ὁ λόγος ἦν πρὸς τὸν θεόν, καὶ θεὸς ἦν ὁ λόγος.';
 
   document.getElementById('btn-example').addEventListener('click', function () {
-    elTitle.value = SAMPLE_TITLE;
     elText.value = SAMPLE_TEXT;
     countChars();
     elText.focus();
@@ -111,15 +106,6 @@ Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng n
     return '<span class="chip" style="color:' + SA.COLORS[f.k] + '">' + f.vi +
       ' (' + f.en + ')</span>';
   }).join('');
-
-  /* Rút gọn tên file từ tiêu đề (bỏ dấu, thay ký tự lạ bằng gạch nối). */
-  function slug(s) {
-    s = s.toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/đ/g, 'd')
-      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    return s || 'satzanalyse';
-  }
 
   function countChars() {
     var n = Array.from(elText.value.trim()).length;
@@ -165,7 +151,7 @@ Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng n
   }
 
   document.getElementById('btn-run').addEventListener('click', function () {
-    var model = SA.analyze(elText.value, { title: elTitle.value });
+    var model = SA.analyze(elText.value, {});
     if (!model.ok) {
       if (model.code === 'empty') {
         fail('Bạn chưa dán văn bản. Hãy dán câu tiếng Hy Lạp vào ô "Văn bản gốc" rồi bấm "Tạo khung phân tích".');
@@ -179,7 +165,7 @@ Tool tách câu, tách khối từ, tra <b>từ điển 800 từ thông dụng n
     }
     lastHTML = SA_HTML.build(model);
     lastTEX = SA_TEX.build(model);
-    lastName = model.title ? 'satzanalyse-' + slug(model.title) : 'satzanalyse';
+    lastName = 'satzanalyse'; /* không còn ô Tiêu đề (Phần 6): tên file mặc định */
 
     var nTok = 0;
     model.sentences.forEach(function (s) { nTok += s.tokens.length; });
